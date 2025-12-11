@@ -1499,24 +1499,3 @@ ICACHE_SUPPORTED        1
 U_SUPPORTED             1
 ZICBOM_SUPPORTED        1
 ZICBOZ_SUPPORTED        1
-
-deriv   syn_polito_rv32gc_cached       rv32gc
-ZICSR_SUPPORTED         1
-E_SUPPORTED             0
-PMP_ENTRIES             16
-DTIM_RANGE              64'h1FF
-IROM_RANGE              64'hFFFF
-BOOTROM_RANGE           64'hFFFF
-UNCORE_RAM_RANGE        64'h1FFFFFFF
-DCACHE_WAYSIZEINBYTES   32'd512
-ICACHE_WAYSIZEINBYTES   32'd512
-DCACHE_NUMWAYS          32'd1
-ICACHE_NUMWAYS          32'd1
-BPRED_SIZE              32'd5
-BTB_SIZE                32'd5
-DCACHE_SUPPORTED        1
-ICACHE_SUPPORTED        1
-# User mode supported
-U_SUPPORTED             1
-ZICBOM_SUPPORTED        1
-ZICBOZ_SUPPORTED        1
