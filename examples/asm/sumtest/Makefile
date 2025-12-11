@@ -1,10 +1,10 @@
 TARGET = sumtest
 
 $(TARGET).objdump: $(TARGET)
-	riscv64-unknown-elf-objdump -D $(TARGET) > $(TARGET).objdump
+	/opt/cvw_toolchain/bin/riscv64-unknown-elf-objdump -D $(TARGET) > $(TARGET).objdump
 
 $(TARGET): $(TARGET).S sum.S Makefile
-	riscv64-unknown-elf-gcc -g -o $(TARGET) -march=rv64gc -mabi=lp64 -mcmodel=medany \
+	/opt/cvw_toolchain/bin/riscv64-unknown-elf-gcc -g -o $(TARGET) -march=rv64gc -mabi=lp64 -mcmodel=medany \
 	    -nostartfiles -T../../link/link.ld $(TARGET).S sum.S
 
 sim:
