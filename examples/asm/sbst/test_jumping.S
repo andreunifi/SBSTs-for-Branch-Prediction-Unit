@@ -22,6 +22,7 @@ test_jumping:
 	li t0, 0x00104000    # save stack pointer
 	sw sp, 0(t0)
 
+#Real test starts here
 
 	li x1,1
 	li x2,0
