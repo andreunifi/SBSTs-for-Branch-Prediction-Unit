@@ -1524,7 +1524,7 @@ ZICBOZ_SUPPORTED        1
 
 deriv   syn_polito_rv32e_cached_assignment        rv32e
 ZICSR_SUPPORTED         1
-E_SUPPORTED             0
+E_SUPPORTED             1
 PMP_ENTRIES             16
 DTIM_RANGE              64'h1FF
 IROM_RANGE              64'hFFFF
@@ -1540,5 +1540,5 @@ DCACHE_SUPPORTED        1
 ICACHE_SUPPORTED        1
 # User mode supported
 U_SUPPORTED             1
-ZICBOM_SUPPORTED        1
-ZICBOZ_SUPPORTED        1
+ZICBOM_SUPPORTED        0
+ZICBOZ_SUPPORTED        0

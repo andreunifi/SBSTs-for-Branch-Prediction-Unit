@@ -7,12 +7,15 @@
 # the width is set by the elf's type to allow for individual elf compilation
 
 BITWIDTH = $(if $(findstring ELF32, $(shell riscv64-unknown-elf-readelf -h $<)),32, \
-	         $(if $(findstring ELF64, $(shell riscv64-unknown-elf-readelf -h $<)),64, \
-					 $(error "Unknown bit width (XLEN) for $<")))
+           $(if $(findstring ELF64, $(shell riscv64-unknown-elf-readelf -h $<)),64, \
+           $(error "Unknown bit width (XLEN) for $<")))
 
 %.memfile: %
 	echo "Processing $< with --bit-width ${BITWIDTH}"; \
-	riscv64-unknown-elf-elf2hex --bit-width ${BITWIDTH} --input $< --output $@
+	riscv64-unknown-elf-objcopy -O binary --adjust-vma=-0x80000000 $< $@.bin
+	echo "@00000000" > $@
+	od -An -v -t x4 -w4 $@.bin | tr -d ' ' >> $@
+	rm $@.bin
 
 %.objdump.addr: %.objdump
 	extractFunctionRadix.sh $<
