@@ -4,8 +4,9 @@ FaultGenerate
 {
     #SAF    
         #NA [0,1] {PORT "wallypipelinedcore_gate.**"}
-        NA [0,1] {PORT "wallypipelinedcore_gate.ifu.**"}
-        #NA [0,1] {PORT "wallypipelinedcore_gate.ifu.bpred.**"}
+        #NA [0,1] {PORT "wallypipelinedcore_gate.ifu.**"}
+        NA [0,1] {PORT "wallypipelinedcore_gate.ifu.*bpred*.**"}
+        #NA [0,1] {PORT "wallypipelinedcore_gate.ifu.\bpred. **"}
         #NA [0,1] {PORT "wallypipelinedcore_gate.ifu.bpred.pcmux1.**"}
         #NA [0,1] {PORT "wallypipelinedcore_gate.ifu.bpred.icpred.**"}
         #NA [0,1] {PORT "wallypipelinedcore_gate.ifu.bpred.PCSrcMreg.**"}
@@ -14,7 +15,8 @@ FaultGenerate
         #NA [0,1] {PORT "riscv_core.**"}
 
     #TDF
-        NA [R,F] {PORT "wallypipelinedcore_gate.ifu.**"}
+        #NA [R,F] {PORT "wallypipelinedcore_gate.ifu.**"}
+        NA [R,F] {PORT "wallypipelinedcore_gate.ifu.*bpred*.**"}
         #NA [R,F] {PORT "riscv_core.ex_stage_i_alu_i.**"}
         #NA [R,F] {PORT "riscv_core.ex_stage_i_mult_i.**"}
         #NA [R,F] {PORT "riscv_core.**"}

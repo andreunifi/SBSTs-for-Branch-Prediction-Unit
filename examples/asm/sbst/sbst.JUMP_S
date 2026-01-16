@@ -33,14 +33,7 @@ test1:
 
 
     # You can write your code here 
-	
-	li x1,1
-	li x2,0
-	li x3,3
-	li x4,0
-	li x5,0
-	li x6,0
-	li x31,10
+
 
 startPoint: 
 	addi x1, x1, 1

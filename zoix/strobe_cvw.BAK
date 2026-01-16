@@ -22,23 +22,7 @@ initial begin
     #22;
     forever begin 
         
-        $fs_strobe(wallypipelinedcore_gate.ifu.\bpred.icpred );
-        $fs_strobe(wallypipelinedcore_gate.ifu.\bpred.pcmux1 );
-        $fs_strobe(wallypipelinedcore_gate.ifu.\bpred.PCSrcMReg );
-
-        $fs_strobe(wallypipelinedcore_gate.ifu.\bpred.icpred .InstrClassRegE );      
-        $fs_strobe(wallypipelinedcore_gate.ifu.\bpred.icpred .InstrClassRegM );     
-        $fs_strobe(wallypipelinedcore_gate.ifu.\bpred.icpred .InstrClassRegW );      
-        $fs_strobe(wallypipelinedcore_gate.ifu.\bpred.icpred .PredInstrClassRegD );
-
-        $fs_strobe(wallypipelinedcore_gate.ifu.\bpred.icpred .WrongInstrClassRegE ); 
-        $fs_strobe(wallypipelinedcore_gate.ifu.\bpred.icpred .BPClassWrongRegM );
-
-
-        
-        
-        
-
+        $fs_strobe(`TOPLEVEL );
         #10;
         $display("Strobed at %t", $time);
     end
