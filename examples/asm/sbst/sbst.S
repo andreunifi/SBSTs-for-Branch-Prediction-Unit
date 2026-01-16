@@ -23,9 +23,51 @@ test1:
 
     # You can write your code here 
 
-	
+# 	  # ----------------------------
+#     # BPU Stress Patterns (RV32E-safe)
+#     # ----------------------------
+#     li s0, 0               # counter 0
+#     li s1, 16              # loop limit
+
+# train_taken:
+#     addi s0, s0, 1
+#     beq  s0, s0, train_taken  # always taken
+#     nop
+
+#     li s0, 0
+# train_not_taken:
+#     addi s0, s0, 1
+#     bne  s0, s0, train_not_taken  # never taken
+#     nop
+
+#     # Alternating branches on same PC
+#     li s0, 0               # counter
+# alt_loop:
+#     addi s0, s0, 1
+#     andi s3, s0, 1         # use gp (x3) as temp
+#     beq  s3, x0, taken_path
+#     nop
+#     j not_taken_path
+
+# taken_path:
+#     nop
+#     blt s0, s1, alt_loop
+#     j end_alt
+
+# not_taken_path:
+#     nop
+#     blt s0, s1, alt_loop
+
+# end_alt:
+#     nop
+
+#     # Optional: store PC/branch result for observation
+#     auipc x3, 0            # x3 = PC
+#     sw x3, 0(sp)           # store to stack
+
 
     li a0, 0xCAFECAFE    # return value
+
 
 
     # ABI epilogue
