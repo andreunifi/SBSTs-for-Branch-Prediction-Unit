@@ -14,7 +14,7 @@ module strobe;
 
 // Strobe point
 
-
+//wallypipelinedcore_gate
 //#`START_TIME;
 
 initial begin 
@@ -22,25 +22,40 @@ initial begin
     #22;
     forever begin 
         
-        $fs_strobe(wallypipelinedcore_gate.ifu.\bpred.icpred );
-        $fs_strobe(wallypipelinedcore_gate.ifu.\bpred.pcmux1 );
-        $fs_strobe(wallypipelinedcore_gate.ifu.\bpred.PCSrcMReg );
+        //GOLDEN: 
 
-        $fs_strobe(wallypipelinedcore_gate.ifu.\bpred.icpred .InstrClassRegE );      
-        $fs_strobe(wallypipelinedcore_gate.ifu.\bpred.icpred .InstrClassRegM );     
-        $fs_strobe(wallypipelinedcore_gate.ifu.\bpred.icpred .InstrClassRegW );      
-        $fs_strobe(wallypipelinedcore_gate.ifu.\bpred.icpred .PredInstrClassRegD );
+        $fs_strobe(wallypipelinedcore_gate.ifu.bpred_bpred.Predictor_DirPredictor);
+        $fs_strobe(wallypipelinedcore_gate.ifu.bpred_bpred.Predictor_DirPredictor.BHT);
 
-        $fs_strobe(wallypipelinedcore_gate.ifu.\bpred.icpred .WrongInstrClassRegE ); 
-        $fs_strobe(wallypipelinedcore_gate.ifu.\bpred.icpred .BPClassWrongRegM );
-
-
+        $fs_strobe(wallypipelinedcore_gate.ifu.bpred_bpred.Predictor_DirPredictor.NewPredictionRegM);
         
+        // PredictionRegE (76 faults)
+        $fs_strobe(wallypipelinedcore_gate.ifu.bpred_bpred.Predictor_DirPredictor.PredictionRegE);
         
+        // PredictionRegD (76 faults)
+        $fs_strobe(wallypipelinedcore_gate.ifu.bpred_bpred.Predictor_DirPredictor.PredictionRegD);
         
+        // BPDirUpdateE (40 faults)
+        $fs_strobe(wallypipelinedcore_gate.ifu.bpred_bpred.Predictor_DirPredictor.BPDirUpdateE);
 
+        //Originale basso
+        //$fs_strobe(wallypipelinedcore_gate.ifu.bpred_bpred.Predictor_DirPredictor);
+        //$fs_strobe(wallypipelinedcore_gate.ifu.bpred_bpred.BPWrongE);
+        //$fs
+
+        //$fs_strobe(wallypipelinedcore_gate.ifu);
+        //$fs_strobe(wallypipelinedcore_gate.HRDATA);
+        //$fs_strobe(wallypipelinedcore_gate.HREADY);
+        //$fs_strobe(wallypipelinedcore_gate.HRESP);
+        //$fs_strobe(wallypipelinedcore_gate.HADDR);
+        //$fs_strobe(wallypipelinedcore_gate.HWDATA);
+        //$fs_strobe(wallypipelinedcore_gate.HWRITE);
+        
         #10;
         $display("Strobed at %t", $time);
+        $display("HRDATA: %h", wallypipelinedcore_gate.HRDATA);
+        $display("HWRITE: %h", wallypipelinedcore_gate.HWRITE);
+
     end
 end 
 

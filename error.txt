@@ -1,0 +1,423 @@
+Reading pref.tcl
+
+# 2022.4
+
+# do wally.do syn_polito_rv32e_cached_assignment sbst_sbst.elf testbench --args " +ElfFile=/home/s338780/WALLY/examples/asm/sbst/sbst.elf" --params " MAKE_VCD=1" --define "+define+GATE_LEVEL=1 " --vcd 
+# 1
+# syn_polito_rv32e_cached_assignment
+# sbst_sbst.elf
+# testbench
+# wkdir/syn_polito_rv32e_cached_assignment_sbst_sbst.elf
+# /home/s338780/WALLY
+# /home/s338780/WALLY/config
+# /home/s338780/WALLY/src
+# /home/s338780/WALLY/testbench
+# /home/s338780/WALLY/addins/cvw-arch-verif/fcov
+# 0
+# 0
+# 0
+# 0
+# 0
+# 0
+# number of args = 10
+# lst = --args { +ElfFile=/home/s338780/WALLY/examples/asm/sbst/sbst.elf} --params { MAKE_VCD=1} --define {+define+GATE_LEVEL=1 } --vcd
+# +acc
+# 0
+# --params { MAKE_VCD=1} --define {+define+GATE_LEVEL=1 }
+# 0
+# --define {+define+GATE_LEVEL=1 }
+# 0
+# GUI = 0
+# GATE_SIM = 0
+# GATE = 
+# ccov = 0
+# lockstep = 0
+# FunctCoverage = 0
+# Breker = 0
+# remaining list = 
+# Extra +args =  +ElfFile=/home/s338780/WALLY/examples/asm/sbst/sbst.elf
+# Extra params = -GMAKE_VCD=1
+# Extra defines = +define+GATE_LEVEL=1 
+# +incdir+/home/s338780/WALLY/config/syn_polito_rv32e_cached_assignment +incdir+/home/s338780/WALLY/config/deriv/syn_polito_rv32e_cached_assignment +incdir+/home/s338780/WALLY/config/shared
+# /home/s338780/WALLY/src/cvw.sv /home/s338780/WALLY/testbench/testbench.sv /home/s338780/WALLY/testbench/common/*.sv /home/s338780/WALLY/src/*/*.sv /home/s338780/WALLY/src/*/*/*.sv /home/s338780/WALLY/addins/verilog-ethernet/*/*.sv /home/s338780/WALLY/addins/verilog-ethernet/*/*/*/*.sv
+# QuestaSim-64 vlog 2022.4 Compiler 2022.10 Oct 18 2022
+# Start time: 21:59:21 on Jan 16,2026
+# vlog -permissive -lint -work wkdir/syn_polito_rv32e_cached_assignment_sbst_sbst.elf "+incdir+/home/s338780/WALLY/config/syn_polito_rv32e_cached_assignment" "+incdir+/home/s338780/WALLY/config/deriv/syn_polito_rv32e_cached_assignment" "+incdir+/home/s338780/WALLY/config/shared" "+define+GATE_LEVEL=1" /home/s338780/WALLY/src/cvw.sv /home/s338780/WALLY/testbench/testbench.sv /home/s338780/WALLY/testbench/common/DCacheFlushFSM.sv /home/s338780/WALLY/testbench/common/functionName.sv /home/s338780/WALLY/testbench/common/instrNameDecTB.sv /home/s338780/WALLY/testbench/common/instrTrackerTB.sv /home/s338780/WALLY/testbench/common/loggers.sv /home/s338780/WALLY/testbench/common/ramxdetector.sv /home/s338780/WALLY/testbench/common/riscvassertions.sv /home/s338780/WALLY/testbench/common/riscvassertions_wally.sv /home/s338780/WALLY/testbench/common/rvvitbwrapper.sv /home/s338780/WALLY/testbench/common/wallyTracer.sv /home/s338780/WALLY/testbench/common/watchdog.sv /home/s338780/WALLY/src/cache/cache.sv /home/s338780/WALLY/src/cache/cacheLRU.sv /home/s338780/WALLY/src/cache/cachefsm.sv /home/s338780/WALLY/src/cache/cacheway.sv /home/s338780/WALLY/src/cache/subcachelineread.sv /home/s338780/WALLY/src/ebu/ahbcacheinterface.sv /home/s338780/WALLY/src/ebu/ahbinterface.sv /home/s338780/WALLY/src/ebu/buscachefsm.sv /home/s338780/WALLY/src/ebu/busfsm.sv /home/s338780/WALLY/src/ebu/controllerinput.sv /home/s338780/WALLY/src/ebu/ebu.sv /home/s338780/WALLY/src/ebu/ebufsmarb.sv /home/s338780/WALLY/src/fpu/fclassify.sv /home/s338780/WALLY/src/fpu/fcmp.sv /home/s338780/WALLY/src/fpu/fctrl.sv /home/s338780/WALLY/src/fpu/fcvt.sv /home/s338780/WALLY/src/fpu/fhazard.sv /home/s338780/WALLY/src/fpu/fli.sv /home/s338780/WALLY/src/fpu/fmtparams.sv /home/s338780/WALLY/src/fpu/fpu.sv /home/s338780/WALLY/src/fpu/fregfile.sv /home/s338780/WALLY/src/fpu/fround.sv /home/s338780/WALLY/src/fpu/fsgninj.sv /home/s338780/WALLY/src/fpu/packoutput.sv /home/s338780/WALLY/src/fpu/unpack.sv /home/s338780/WALLY/src/fpu/unpackinput.sv /home/s338780/WALLY/src/generic/adder.sv /home/s338780/WALLY/src/generic/aplusbeq0.sv /home/s338780/WALLY/src/generic/arrs.sv /home/s338780/WALLY/src/generic/binencoder.sv /home/s338780/WALLY/src/generic/counter.sv /home/s338780/WALLY/src/generic/csa.sv /home/s338780/WALLY/src/generic/decoder.sv /home/s338780/WALLY/src/generic/lzc.sv /home/s338780/WALLY/src/generic/mux.sv /home/s338780/WALLY/src/generic/neg.sv /home/s338780/WALLY/src/generic/onehotdecoder.sv /home/s338780/WALLY/src/generic/or_rows.sv /home/s338780/WALLY/src/generic/priorityonehot.sv /home/s338780/WALLY/src/generic/prioritythermometer.sv /home/s338780/WALLY/src/hazard/hazard.sv /home/s338780/WALLY/src/ieu/alu.sv /home/s338780/WALLY/src/ieu/comparator.sv /home/s338780/WALLY/src/ieu/controller.sv /home/s338780/WALLY/src/ieu/datapath.sv /home/s338780/WALLY/src/ieu/extend.sv /home/s338780/WALLY/src/ieu/ieu.sv /home/s338780/WALLY/src/ieu/regfile.sv /home/s338780/WALLY/src/ieu/shifter.sv /home/s338780/WALLY/src/ifu/decompress.sv /home/s338780/WALLY/src/ifu/ifu.sv /home/s338780/WALLY/src/ifu/irom.sv /home/s338780/WALLY/src/ifu/spill.sv /home/s338780/WALLY/src/lsu/align.sv /home/s338780/WALLY/src/lsu/amoalu.sv /home/s338780/WALLY/src/lsu/atomic.sv /home/s338780/WALLY/src/lsu/dtim.sv /home/s338780/WALLY/src/lsu/endianswap.sv /home/s338780/WALLY/src/lsu/lrsc.sv /home/s338780/WALLY/src/lsu/lsu.sv /home/s338780/WALLY/src/lsu/subwordread.sv /home/s338780/WALLY/src/lsu/subwordwrite.sv /home/s338780/WALLY/src/lsu/swbytemask.sv /home/s338780/WALLY/src/mdu/div.sv /home/s338780/WALLY/src/mdu/divstep.sv /home/s338780/WALLY/src/mdu/mdu.sv /home/s338780/WALLY/src/mdu/mul.sv /home/s338780/WALLY/src/mmu/adrdec.sv /home/s338780/WALLY/src/mmu/adrdecs.sv /home/s338780/WALLY/src/mmu/hptw.sv /home/s338780/WALLY/src/mmu/mmu.sv /home/s338780/WALLY/src/mmu/pmachecker.sv /home/s338780/WALLY/src/mmu/pmpadrdec.sv /home/s338780/WALLY/src/mmu/pmpchecker.sv /home/s338780/WALLY/src/privileged/csr.sv /home/s338780/WALLY/src/privileged/csrc.sv /home/s338780/WALLY/src/privileged/csri.sv /home/s338780/WALLY/src/privileged/csrm.sv /home/s338780/WALLY/src/privileged/csrs.sv /home/s338780/WALLY/src/privileged/csrsr.sv /home/s338780/WALLY/src/privileged/csru.sv /home/s338780/WALLY/src/privileged/privdec.sv /home/s338780/WALLY/src/privileged/privileged.sv /home/s338780/WALLY/src/privileged/privmode.sv /home/s338780/WALLY/src/privileged/privpiperegs.sv /home/s338780/WALLY/src/privileged/trap.sv /home/s338780/WALLY/src/rvvi/csrindextoaddr.sv /home/s338780/WALLY/src/rvvi/packetizer.sv /home/s338780/WALLY/src/rvvi/priorityaomux.sv /home/s338780/WALLY/src/rvvi/regchangedetect.sv /home/s338780/WALLY/src/rvvi/rvvisynth.sv /home/s338780/WALLY/src/rvvi/triggergen.sv /home/s338780/WALLY/src/uncore/ahbapbbridge.sv /home/s338780/WALLY/src/uncore/clint_apb.sv /home/s338780/WALLY/src/uncore/gpio_apb.sv /home/s338780/WALLY/src/uncore/plic_apb.sv /home/s338780/WALLY/src/uncore/ram_ahb.sv /home/s338780/WALLY/src/uncore/rom_ahb.sv /home/s338780/WALLY/src/uncore/spi_apb.sv /home/s338780/WALLY/src/uncore/spi_controller.sv /home/s338780/WALLY/src/uncore/spi_fifo.sv /home/s338780/WALLY/src/uncore/trickbox_apb.sv /home/s338780/WALLY/src/uncore/uartPC16550D.sv /home/s338780/WALLY/src/uncore/uart_apb.sv /home/s338780/WALLY/src/uncore/uncore.sv /home/s338780/WALLY/src/wally/wallypipelinedcore.sv /home/s338780/WALLY/src/wally/wallypipelinedsoc.sv /home/s338780/WALLY/src/fpu/fdivsqrt/fdivsqrt.sv /home/s338780/WALLY/src/fpu/fdivsqrt/fdivsqrtcycles.sv /home/s338780/WALLY/src/fpu/fdivsqrt/fdivsqrtexpcalc.sv /home/s338780/WALLY/src/fpu/fdivsqrt/fdivsqrtfgen2.sv /home/s338780/WALLY/src/fpu/fdivsqrt/fdivsqrtfgen4.sv /home/s338780/WALLY/src/fpu/fdivsqrt/fdivsqrtfsm.sv /home/s338780/WALLY/src/fpu/fdivsqrt/fdivsqrtiter.sv /home/s338780/WALLY/src/fpu/fdivsqrt/fdivsqrtpostproc.sv /home/s338780/WALLY/src/fpu/fdivsqrt/fdivsqrtpreproc.sv /home/s338780/WALLY/src/fpu/fdivsqrt/fdivsqrtstage2.sv /home/s338780/WALLY/src/fpu/fdivsqrt/fdivsqrtstage4.sv /home/s338780/WALLY/src/fpu/fdivsqrt/fdivsqrtuotfc2.sv /home/s338780/WALLY/src/fpu/fdivsqrt/fdivsqrtuotfc4.sv /home/s338780/WALLY/src/fpu/fdivsqrt/fdivsqrtuslc2.sv /home/s338780/WALLY/src/fpu/fdivsqrt/fdivsqrtuslc4.sv /home/s338780/WALLY/src/fpu/fdivsqrt/fdivsqrtuslc4cmp.sv /home/s338780/WALLY/src/fpu/fma/fma.sv /home/s338780/WALLY/src/fpu/fma/fmaadd.sv /home/s338780/WALLY/src/fpu/fma/fmaalign.sv /home/s338780/WALLY/src/fpu/fma/fmaexpadd.sv /home/s338780/WALLY/src/fpu/fma/fmalza.sv /home/s338780/WALLY/src/fpu/fma/fmamult.sv /home/s338780/WALLY/src/fpu/fma/fmasign.sv /home/s338780/WALLY/src/fpu/postproc/cvtshiftcalc.sv /home/s338780/WALLY/src/fpu/postproc/divshiftcalc.sv /home/s338780/WALLY/src/fpu/postproc/flags.sv /home/s338780/WALLY/src/fpu/postproc/fmashiftcalc.sv /home/s338780/WALLY/src/fpu/postproc/negateintres.sv /home/s338780/WALLY/src/fpu/postproc/normshift.sv /home/s338780/WALLY/src/fpu/postproc/postprocess.sv /home/s338780/WALLY/src/fpu/postproc/resultsign.sv /home/s338780/WALLY/src/fpu/postproc/round.sv /home/s338780/WALLY/src/fpu/postproc/roundsign.sv /home/s338780/WALLY/src/fpu/postproc/shiftcorrection.sv /home/s338780/WALLY/src/fpu/postproc/specialcase.sv /home/s338780/WALLY/src/generic/flop/flop.sv /home/s338780/WALLY/src/generic/flop/flopen.sv /home/s338780/WALLY/src/generic/flop/flopenl.sv /home/s338780/WALLY/src/generic/flop/flopenr.sv /home/s338780/WALLY/src/generic/flop/flopenrc.sv /home/s338780/WALLY/src/generic/flop/flopr.sv /home/s338780/WALLY/src/generic/flop/synchronizer.sv /home/s338780/WALLY/src/generic/mem/ram1p1rwbe.sv /home/s338780/WALLY/src/generic/mem/ram1p1rwbe_64x128.sv /home/s338780/WALLY/src/generic/mem/ram1p1rwbe_64x22.sv /home/s338780/WALLY/src/generic/mem/ram1p1rwbe_64x44.sv /home/s338780/WALLY/src/generic/mem/ram1p1rwe.sv /home/s338780/WALLY/src/generic/mem/ram2p1r1wbe.sv /home/s338780/WALLY/src/generic/mem/ram2p1r1wbe_1024x36.sv /home/s338780/WALLY/src/generic/mem/ram2p1r1wbe_1024x68.sv /home/s338780/WALLY/src/generic/mem/ram2p1r1wbe_128x64.sv /home/s338780/WALLY/src/generic/mem/ram2p1r1wbe_2048x64.sv /home/s338780/WALLY/src/generic/mem/ram2p1r1wbe_64x32.sv /home/s338780/WALLY/src/generic/mem/rom1p1r.sv /home/s338780/WALLY/src/generic/mem/rom1p1r_128x32.sv /home/s338780/WALLY/src/generic/mem/rom1p1r_128x64.sv /home/s338780/WALLY/src/ieu/aes/aes32d.sv /home/s338780/WALLY/src/ieu/aes/aes32e.sv /home/s338780/WALLY/src/ieu/aes/aes64d.sv /home/s338780/WALLY/src/ieu/aes/aes64e.sv /home/s338780/WALLY/src/ieu/aes/aes64ks1i.sv /home/s338780/WALLY/src/ieu/aes/aes64ks2.sv /home/s338780/WALLY/src/ieu/aes/aesinvmixcolumns32.sv /home/s338780/WALLY/src/ieu/aes/aesinvmixcolumns8.sv /home/s338780/WALLY/src/ieu/aes/aesinvsbox64.sv /home/s338780/WALLY/src/ieu/aes/aesinvsbox8.sv /home/s338780/WALLY/src/ieu/aes/aesinvshiftrows64.sv /home/s338780/WALLY/src/ieu/aes/aesmixcolumns32.sv /home/s338780/WALLY/src/ieu/aes/aesmixcolumns8.sv /home/s338780/WALLY/src/ieu/aes/aessbox32.sv /home/s338780/WALLY/src/ieu/aes/aessbox8.sv /home/s338780/WALLY/src/ieu/aes/aesshiftrows64.sv /home/s338780/WALLY/src/ieu/aes/galoismultforward8.sv /home/s338780/WALLY/src/ieu/aes/galoismultinverse8.sv /home/s338780/WALLY/src/ieu/aes/rconlut32.sv /home/s338780/WALLY/src/ieu/aes/rotate.sv /home/s338780/WALLY/src/ieu/bmu/bitmanipalu.sv /home/s338780/WALLY/src/ieu/bmu/bitreverse.sv /home/s338780/WALLY/src/ieu/bmu/bmuctrl.sv /home/s338780/WALLY/src/ieu/bmu/byteop.sv /home/s338780/WALLY/src/ieu/bmu/clmul.sv /home/s338780/WALLY/src/ieu/bmu/cnt.sv /home/s338780/WALLY/src/ieu/bmu/ext.sv /home/s338780/WALLY/src/ieu/bmu/popcnt.sv /home/s338780/WALLY/src/ieu/bmu/zbb.sv /home/s338780/WALLY/src/ieu/bmu/zbc.sv /home/s338780/WALLY/src/ieu/kmu/packer.sv /home/s338780/WALLY/src/ieu/kmu/zbkb.sv /home/s338780/WALLY/src/ieu/kmu/zbkx.sv /home/s338780/WALLY/src/ieu/kmu/zipper.sv /home/s338780/WALLY/src/ieu/kmu/zknde32.sv /home/s338780/WALLY/src/ieu/kmu/zknde64.sv /home/s338780/WALLY/src/ieu/kmu/zknh32.sv /home/s338780/WALLY/src/ieu/kmu/zknh64.sv /home/s338780/WALLY/src/ieu/sha/sha256.sv /home/s338780/WALLY/src/ieu/sha/sha512_32.sv /home/s338780/WALLY/src/ieu/sha/sha512_64.sv /home/s338780/WALLY/src/ifu/bpred/RASPredictor.sv /home/s338780/WALLY/src/ifu/bpred/bpred.sv /home/s338780/WALLY/src/ifu/bpred/btb.sv /home/s338780/WALLY/src/ifu/bpred/gshare.sv /home/s338780/WALLY/src/ifu/bpred/gsharebasic.sv /home/s338780/WALLY/src/ifu/bpred/icpred.sv /home/s338780/WALLY/src/ifu/bpred/localaheadbp.sv /home/s338780/WALLY/src/ifu/bpred/localbpbasic.sv /home/s338780/WALLY/src/ifu/bpred/localrepairbp.sv /home/s338780/WALLY/src/ifu/bpred/satCounter2.sv /home/s338780/WALLY/src/ifu/bpred/twoBitPredictor.sv /home/s338780/WALLY/src/mmu/tlb/tlb.sv /home/s338780/WALLY/src/mmu/tlb/tlbcam.sv /home/s338780/WALLY/src/mmu/tlb/tlbcamline.sv /home/s338780/WALLY/src/mmu/tlb/tlbcontrol.sv /home/s338780/WALLY/src/mmu/tlb/tlblru.sv /home/s338780/WALLY/src/mmu/tlb/tlbmixer.sv /home/s338780/WALLY/src/mmu/tlb/tlbram.sv /home/s338780/WALLY/src/mmu/tlb/tlbramline.sv /home/s338780/WALLY/src/mmu/tlb/vm64check.sv /home/s338780/WALLY/addins/verilog-ethernet/rtl/axis_gmii_rx.sv /home/s338780/WALLY/addins/verilog-ethernet/rtl/axis_gmii_tx.sv /home/s338780/WALLY/addins/verilog-ethernet/rtl/eth_axis_tx.sv /home/s338780/WALLY/addins/verilog-ethernet/rtl/eth_mac_1g.sv /home/s338780/WALLY/addins/verilog-ethernet/rtl/eth_mac_mii.sv /home/s338780/WALLY/addins/verilog-ethernet/rtl/eth_mac_mii_fifo.sv /home/s338780/WALLY/addins/verilog-ethernet/rtl/lfsr.sv /home/s338780/WALLY/addins/verilog-ethernet/rtl/mac_ctrl_rx.sv /home/s338780/WALLY/addins/verilog-ethernet/rtl/mac_ctrl_tx.sv /home/s338780/WALLY/addins/verilog-ethernet/rtl/mac_pause_ctrl_rx.sv /home/s338780/WALLY/addins/verilog-ethernet/rtl/mac_pause_ctrl_tx.sv /home/s338780/WALLY/addins/verilog-ethernet/rtl/mii_phy_if.sv /home/s338780/WALLY/addins/verilog-ethernet/rtl/ssio_ddr_in.sv /home/s338780/WALLY/addins/verilog-ethernet/rtl/ssio_sdr_in.sv /home/s338780/WALLY/addins/verilog-ethernet/lib/axis/rtl/axis_adapter.sv /home/s338780/WALLY/addins/verilog-ethernet/lib/axis/rtl/axis_async_fifo.sv /home/s338780/WALLY/addins/verilog-ethernet/lib/axis/rtl/axis_async_fifo_adapter.sv -suppress 2282,2583,7053,7063,2596,13286,2605,2250 
+# -- Compiling package cvw
+# -- Compiling package testbench_sv_unit
+# -- Importing package cvw
+# -- Compiling module testbench
+# -- Compiling module DCacheFlushFSM
+# -- Compiling module copyShadow
+# -- Compiling module functionName
+# -- Compiling module instrNameDecTB
+# -- Compiling module instrTrackerTB
+# -- Compiling module loggers
+# -- Compiling module ramxdetector
+# -- Compiling module riscvassertions
+# -- Compiling module riscvassertions_wally
+# -- Compiling module rvvitbwrapper
+# -- Compiling module wallyTracer
+# -- Compiling module watchdog
+# -- Compiling module cache
+# -- Compiling module cacheLRU
+# -- Compiling module cachefsm
+# -- Compiling module cacheway
+# -- Compiling module subcachelineread
+# -- Compiling module ahbcacheinterface
+# -- Compiling module ahbinterface
+# -- Compiling module buscachefsm
+# -- Compiling module busfsm
+# -- Compiling module controllerinput
+# -- Compiling module ebu
+# -- Compiling module ebufsmarb
+# -- Compiling module fclassify
+# -- Compiling module fcmp
+# -- Compiling module fctrl
+# -- Compiling module fcvt
+# -- Compiling module fhazard
+# -- Compiling module fli
+# -- Compiling module fmtparams
+# -- Compiling module fpu
+# -- Compiling module fregfile
+# -- Compiling module fround
+# -- Compiling module fsgninj
+# -- Compiling module packoutput
+# -- Compiling module unpack
+# -- Compiling module unpackinput
+# -- Compiling module adder
+# -- Compiling module aplusbeq0
+# -- Compiling module arrs
+# -- Compiling module binencoder
+# -- Compiling module counter
+# -- Compiling module csa
+# -- Compiling module decoder
+# -- Compiling module lzc
+# -- Compiling module mux2
+# -- Compiling module mux3
+# -- Compiling module mux4
+# -- Compiling module mux5
+# -- Compiling module mux6
+# -- Compiling module mux7
+# -- Compiling module neg
+# -- Compiling module onehotdecoder
+# -- Compiling module or_rows
+# -- Compiling module priorityonehot
+# -- Compiling module prioritythermometer
+# -- Compiling module hazard
+# -- Compiling module alu
+# -- Compiling module comparator
+# -- Compiling module controller
+# -- Compiling module datapath
+# -- Compiling module extend
+# -- Compiling module ieu
+# -- Compiling module regfile
+# -- Compiling module shifter
+# -- Compiling module decompress
+# -- Compiling module ifu
+# -- Compiling module irom
+# -- Compiling module spill
+# -- Compiling module align
+# -- Compiling module amoalu
+# -- Compiling module atomic
+# -- Compiling module dtim
+# -- Compiling module endianswap
+# -- Compiling module lrsc
+# -- Compiling module lsu
+# -- Compiling module subwordread
+# -- Compiling module subwordwrite
+# -- Compiling module swbytemask
+# -- Compiling module div
+# -- Compiling module divstep
+# -- Compiling module mdu
+# -- Compiling module mul
+# -- Compiling module adrdec
+# -- Compiling module adrdecs
+# -- Compiling module hptw
+# -- Compiling module mmu
+# -- Compiling module pmachecker
+# -- Compiling module pmpadrdec
+# -- Compiling module pmpchecker
+# -- Compiling module csr
+# -- Compiling module csrc
+# -- Compiling module csri
+# -- Compiling module csrm
+# -- Compiling module csrs
+# -- Compiling module csrsr
+# -- Compiling module csru
+# -- Compiling module privdec
+# -- Compiling module privileged
+# -- Compiling module privmode
+# -- Compiling module privpiperegs
+# -- Compiling module trap
+# -- Compiling module csrindextoaddr
+# -- Compiling module packetizer
+# -- Compiling module priorityaomux
+# -- Compiling module regchangedetect
+# -- Compiling module rvvisynth
+# -- Compiling module triggergen
+# -- Compiling module ahbapbbridge
+# -- Compiling module clint_apb
+# -- Compiling module gpio_apb
+# -- Compiling module plic_apb
+# -- Compiling module ram_ahb
+# -- Compiling module rom_ahb
+# -- Compiling module spi_apb
+# -- Compiling module spi_controller
+# -- Compiling module spi_fifo
+# -- Compiling module trickbox_apb
+# -- Compiling module uartPC16550D
+# -- Compiling module uart_apb
+# -- Compiling module uncore
+# -- Compiling module wallypipelinedcore
+# -- Compiling module wallypipelinedsoc
+# -- Compiling module fdivsqrt
+# -- Compiling module fdivsqrtcycles
+# -- Compiling module fdivsqrtexpcalc
+# -- Compiling module fdivsqrtfgen2
+# -- Compiling module fdivsqrtfgen4
+# -- Compiling module fdivsqrtfsm
+# -- Compiling module fdivsqrtiter
+# -- Compiling module fdivsqrtpostproc
+# -- Compiling module fdivsqrtpreproc
+# -- Compiling module fdivsqrtstage2
+# -- Compiling module fdivsqrtstage4
+# -- Compiling module fdivsqrtuotfc2
+# -- Compiling module fdivsqrtuotfc4
+# -- Compiling module fdivsqrtuslc2
+# -- Compiling module fdivsqrtuslc4
+# -- Compiling module fdivsqrtuslc4cmp
+# -- Compiling module fma
+# -- Compiling module fmaadd
+# -- Compiling module fmaalign
+# -- Compiling module fmaexpadd
+# -- Compiling module fmalza
+# -- Compiling module fmamult
+# -- Compiling module fmasign
+# -- Compiling module cvtshiftcalc
+# -- Compiling module divshiftcalc
+# -- Compiling module flags
+# -- Compiling module fmashiftcalc
+# -- Compiling module negateintres
+# -- Compiling module normshift
+# -- Compiling module postprocess
+# -- Compiling module resultsign
+# -- Compiling module round
+# -- Compiling module roundsign
+# -- Compiling module shiftcorrection
+# -- Compiling module specialcase
+# -- Compiling module flop
+# -- Compiling module flopen
+# -- Compiling module flopenl
+# -- Compiling module flopenr
+# -- Compiling module flopenrc
+# -- Compiling module flopr
+# -- Compiling module synchronizer
+# -- Compiling module ram1p1rwbe
+# -- Compiling module ram1p1rwbe_64x128
+# -- Compiling module ram1p1rwbe_64x22
+# -- Compiling module ram1p1rwbe_64x44
+# -- Compiling module ram1p1rwe
+# -- Compiling module ram2p1r1wbe
+# -- Compiling module ram2p1r1wbe_1024x36
+# -- Compiling module ram2p1r1wbe_1024x68
+# -- Compiling module ram2p1r1wbe_128x64
+# -- Compiling module ram2p1r1wbe_2048x64
+# -- Compiling module ram2p1r1wbe_64x32
+# -- Compiling module rom1p1r
+# -- Compiling module rom1p1r_128x32
+# -- Compiling module rom1p1r_128x64
+# -- Compiling module aes32d
+# -- Compiling module aes32e
+# -- Compiling module aes64d
+# -- Compiling module aes64e
+# -- Compiling module aes64ks1i
+# -- Compiling module aes64ks2
+# -- Compiling module aesinvmixcolumns32
+# -- Compiling module aesinvmixcolumns8
+# -- Compiling module aesinvsbox64
+# -- Compiling module aesinvsbox8
+# -- Compiling module aesinvshiftrows64
+# -- Compiling module aesmixcolumns32
+# -- Compiling module aesmixcolumns8
+# -- Compiling module aessbox32
+# -- Compiling module aessbox8
+# -- Compiling module aesshiftrows64
+# -- Compiling module galoismultforward8
+# -- Compiling module galoismultinverse8
+# -- Compiling module rconlut32
+# -- Compiling module rotate
+# -- Compiling module bitmanipalu
+# -- Compiling module bitreverse
+# -- Compiling module bmuctrl
+# -- Compiling module byteop
+# -- Compiling module clmul
+# -- Compiling module cnt
+# -- Compiling module ext
+# -- Compiling module popcnt
+# -- Compiling module zbb
+# -- Compiling module zbc
+# -- Compiling module packer
+# -- Compiling module zbkb
+# -- Compiling module zbkx
+# -- Compiling module zipper
+# -- Compiling module zknde32
+# -- Compiling module zknde64
+# -- Compiling module zknh32
+# -- Compiling module zknh64
+# -- Compiling module sha256
+# -- Compiling module sha512_32
+# -- Compiling module sha512_64
+# -- Compiling module RASPredictor
+# -- Compiling module bpred
+# -- Compiling module btb
+# -- Compiling module gshare
+# -- Compiling module gsharebasic
+# -- Compiling module icpred
+# -- Compiling module localaheadbp
+# -- Compiling module localbpbasic
+# -- Compiling module localrepairbp
+# -- Compiling module satCounter2
+# -- Compiling module twoBitPredictor
+# -- Compiling module tlb
+# -- Compiling module tlbcam
+# -- Compiling module tlbcamline
+# -- Compiling module tlbcontrol
+# -- Compiling module tlblru
+# -- Compiling module tlbmixer
+# -- Compiling module tlbram
+# -- Compiling module tlbramline
+# -- Compiling module vm64check
+# -- Compiling module axis_gmii_rx
+# -- Compiling module axis_gmii_tx
+# -- Compiling module eth_axis_tx
+# -- Compiling module eth_mac_1g
+# -- Compiling module eth_mac_mii
+# -- Compiling module eth_mac_mii_fifo
+# -- Compiling module lfsr
+# -- Compiling module mac_ctrl_rx
+# -- Compiling module mac_ctrl_tx
+# -- Compiling module mac_pause_ctrl_rx
+# -- Compiling module mac_pause_ctrl_tx
+# -- Compiling module mii_phy_if
+# -- Compiling module ssio_ddr_in
+# -- Compiling module ssio_sdr_in
+# -- Compiling module axis_adapter
+# -- Compiling module axis_async_fifo
+# -- Compiling module axis_async_fifo_adapter
+# 
+# Top level modules:
+# 	testbench
+# 	wallyTracer
+# 	arrs
+# 	mux6
+# 	mux7
+# 	prioritythermometer
+# 	triggergen
+# 	trickbox_apb
+# 	fdivsqrtuslc4
+# 	ram2p1r1wbe_128x64
+# 	ram2p1r1wbe_2048x64
+# 	rom1p1r_128x32
+# 	rom1p1r_128x64
+# 	aesmixcolumns8
+# 	rotate
+# 	eth_axis_tx
+# 	ssio_ddr_in
+# End time: 21:59:21 on Jan 16,2026, Elapsed time: 0:00:00
+# Errors: 0, Warnings: 0, Suppressed Warnings: 14
+# QuestaSim-64 vopt 2022.4 Compiler 2022.10 Oct 18 2022
+# ** Warning: (vopt-10587) Some optimizations are turned off because the +acc switch is in effect. This will cause your simulation to run slowly. Please use -access/-debug to maintain needed visibility.
+# Start time: 21:59:21 on Jan 16,2026
+# vopt "+acc" wkdir/syn_polito_rv32e_cached_assignment_sbst_sbst.elf.testbench -work wkdir/syn_polito_rv32e_cached_assignment_sbst_sbst.elf -GMAKE_VCD=1 -o testbenchopt 
+# 
+# Top level modules:
+# 	testbench
+# 
+# Analyzing design...
+# -- Loading module testbench
+# -- Loading module counter
+# -- Loading module flopenr
+# -- Loading module wallypipelinedsoc
+# -- Loading module synchronizer
+# -- Loading module wallypipelinedcore
+# -- Loading module ifu
+# -- Loading module flopenl
+# -- Loading module mux3
+# -- Loading module mux2
+# -- Loading module flopen
+# -- Loading module flopenrc
+# -- Loading module ieu
+# -- Loading module controller
+# -- Loading module datapath
+# -- Loading module regfile
+# -- Loading module extend
+# -- Loading module comparator
+# -- Loading module alu
+# -- Loading module shifter
+# -- Loading module mux5
+# -- Loading module lsu
+# -- Loading module subwordread
+# -- Loading module subwordwrite
+# -- Loading module swbytemask
+# -- Loading module hazard
+# -- Loading module instrTrackerTB
+# -- Loading module instrNameDecTB
+# -- Loading module watchdog
+# -- Loading module ramxdetector
+# -- Loading module riscvassertions
+# -- Loading module riscvassertions_wally
+# -- Loading module loggers
+# -- Loading module DCacheFlushFSM
+# -- Loading module flop
+# ** Error: /home/s338780/WALLY/src/wally/wallypipelinedsoc.sv(99): Module 'wallypipelinedcore_gate' is not defined.
+#  For instance 'core_gate' at path 'testbench.dut'
+# -- Loading module flopr
+# -- Loading module mmu
+# -- Loading module pmachecker
+# -- Loading module adrdecs
+# -- Loading module adrdec
+# -- Loading module cache
+# -- Loading module or_rows
+# -- Loading module subcachelineread
+# -- Loading module cachefsm
+# -- Loading module ahbcacheinterface
+# -- Loading module buscachefsm
+# -- Loading module bpred
+# -- Loading module btb
+# -- Loading module ram2p1r1wbe
+# -- Loading module icpred
+# -- Loading module RASPredictor
+# -- Loading module ebu
+# -- Loading module controllerinput
+# -- Loading module ebufsmarb
+# -- Loading module privileged
+# -- Loading module privmode
+# -- Loading module privdec
+# -- Loading module csr
+# -- Loading module csri
+# -- Loading module csrsr
+# -- Loading module csrm
+# -- Loading module privpiperegs
+# -- Loading module trap
+# -- Loading module uncore
+# -- Loading module ahbapbbridge
+# -- Loading module copyShadow
+# -- Loading module pmpchecker
+# -- Loading module priorityonehot
+# -- Loading module cacheway
+# -- Loading module ram1p1rwe
+# -- Loading module gshare
+# -- Loading module satCounter2
+# -- Loading module ram_ahb
+# -- Loading module ram1p1rwbe
+# -- Loading module rom_ahb
+# -- Loading module rom1p1r
+# -- Loading module pmpadrdec
+# Optimization failed
+# End time: 21:59:21 on Jan 16,2026, Elapsed time: 0:00:00
+# Errors: 1, Warnings: 1
+# ** Error: /eda/Siemens/2022-23/RHELx86/QUESTA-CORE-PRIME_2022.4/questasim/linux_x86_64/vopt failed.
+# Executing ONERROR command at macro ./wally.do line 209
+Config=syn_polito_rv32e_cached_assignment tests=None sim=questa gui=False args='' params='' define='+define+GATE_LEVEL=1'
+Running Questa with command: cd $WALLY/sim/questa; MTI_VCO_MODE=64  vsim -c -do "do wally.do syn_polito_rv32e_cached_assignment sbst_sbst.elf testbench --args \" +ElfFile=/home/s338780/WALLY/examples/asm/sbst/sbst.elf\" --params \" MAKE_VCD=1\" --define \"+define+GATE_LEVEL=1 \" --vcd "

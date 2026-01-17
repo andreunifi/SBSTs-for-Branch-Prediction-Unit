@@ -1523,6 +1523,8 @@ ZICBOZ_SUPPORTED        1
 
 
 deriv   syn_polito_rv32e_cached_assignment        rv32e
+BPRED_SUPPORTED         1
+BPRED_TYPE          `BP_TWOBIT
 ZICSR_SUPPORTED         1
 E_SUPPORTED             0
 PMP_ENTRIES             16
@@ -1536,8 +1538,8 @@ DCACHE_NUMWAYS          32'd1
 ICACHE_NUMWAYS          32'd1
 BPRED_SIZE              32'd5
 BTB_SIZE                32'd5
-DCACHE_SUPPORTED        1
-ICACHE_SUPPORTED        1
+DCACHE_SUPPORTED        0
+ICACHE_SUPPORTED        0
 # User mode supported
 U_SUPPORTED             1
 ZICBOM_SUPPORTED        0

@@ -289,6 +289,7 @@ redirect $filename {report_constraint -all_violators}
 # Check design
 redirect $outputDir/reports/check_design.rpt { check_design }
 
+change_names -hier -rules verilog
 
 
 # Report Final Netlist (Hierarchical)

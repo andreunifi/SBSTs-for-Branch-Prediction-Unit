@@ -280,9 +280,12 @@ module testbench;
     end
     if (MAKE_VCD) begin
       $dumpfile("core_rtl.vcd");
+      $dumpvars(1, dut.core.ifu);
       $dumpvars(1, dut.core.MTimerInt, dut.core.MExtInt, dut.core.SExtInt, dut.core.MSwInt, dut.core.MTIME_CLINT, dut.core.HRDATA, dut.core.HREADY, dut.core.HRESP, dut.core.HCLK, dut.core.HRESETn, dut.core.HADDR, dut.core.HWDATA, dut.core.HWSTRB, dut.core.HWRITE, dut.core.HSIZE, dut.core.HBURST, dut.core.HPROT, dut.core.HTRANS, dut.core.HMASTLOCK, dut.core.ExternalStall);
 `ifdef GATE_LEVEL
-      $dumpports(dut.core_gate,"core_gate.vcd");
+      $dumpports(dut.core_gate,dut.core_gate.ifu,dut.core_gate.ifu.bpred_bpred,"core_gate.vcd");
+ 
+
 `endif /*GATE_LEVEL*/
     end
   end // initial begin
