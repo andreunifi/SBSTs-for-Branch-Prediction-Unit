@@ -18,16 +18,7 @@ ENDC='\033[0m' # Reset to default color
 echo "Executing Wally setup.sh"
 
 # Path to RISC-V Tools
-if [ -d /opt/riscv ]; then
-    export RISCV=/opt/riscv
-elif [ -d ~/riscv ]; then
-    export RISCV=~/riscv
-else
-    # set the $RISCV directory here and remove the subsequent two lines
-    # export RISCV=
-    echo -e "${FAIL_COLOR}\$RISCV directory not found. Checked /opt/riscv and ~/riscv. Edit setup.sh to point to your custom \$RISCV directory.${ENDC}"
-    return 1
-fi
+export RISCV=/opt/cvw_toolchain
 echo \$RISCV set to "${RISCV}"
 
 # Path to Wally repository
@@ -41,19 +32,19 @@ export PATH=$WALLY/bin:$PATH
 # Verilator needs a larger core file size to simulate CORE-V Wally
 ulimit -c 300000
 
-# load site licenses and tool locations
-if [ -e "${RISCV}"/site-setup.sh ]; then
-    source "${RISCV}"/site-setup.sh
-else
-    echo -e "${FAIL_COLOR}site-setup.sh not found in \$RISCV directory. Rerun wally-toolchain-install.sh to automatically download it.${ENDC}"
-    return 1
-fi
+# # load site licenses and tool locations
+# if [ -e "${RISCV}"/site-setup.sh ]; then
+#     source "${RISCV}"/site-setup.sh
+# else
+#     echo -e "${FAIL_COLOR}site-setup.sh not found in \$RISCV directory. Rerun wally-toolchain-install.sh to automatically download it.${ENDC}"
+#     return 1
+# fi
 
-if [ ! -e "${WALLY}/.git/hooks/pre-commit" ]; then
-    pushd "${WALLY}" || return 1
-    echo "Installing pre-commit hooks"
-    pre-commit install
-    popd || return
-fi
+# if [ ! -e "${WALLY}/.git/hooks/pre-commit" ]; then
+#     pushd "${WALLY}" || return 1
+#     echo "Installing pre-commit hooks"
+#     pre-commit install
+#     popd || return
+# fi
 
 echo "setup done"
