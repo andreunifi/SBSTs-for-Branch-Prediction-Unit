@@ -41,8 +41,8 @@ import cvw::*;
 module testbench;
   /* verilator lint_off WIDTHTRUNC */
   /* verilator lint_off WIDTHEXPAND */
-  parameter DEBUG=1;
-  parameter PrintHPMCounters=1;
+  parameter DEBUG=0;
+  parameter PrintHPMCounters=0;
   parameter BPRED_LOGGER=1;
   parameter I_CACHE_ADDR_LOGGER=0;
   parameter D_CACHE_ADDR_LOGGER=0;
@@ -280,6 +280,7 @@ module testbench;
     end
     if (MAKE_VCD) begin
       $dumpfile("core_rtl.vcd");
+      $dumpvars(1, dut.core.ifu);
       $dumpvars(1, dut.core.MTimerInt, dut.core.MExtInt, dut.core.SExtInt, dut.core.MSwInt, dut.core.MTIME_CLINT, dut.core.HRDATA, dut.core.HREADY, dut.core.HRESP, dut.core.HCLK, dut.core.HRESETn, dut.core.HADDR, dut.core.HWDATA, dut.core.HWSTRB, dut.core.HWRITE, dut.core.HSIZE, dut.core.HBURST, dut.core.HPROT, dut.core.HTRANS, dut.core.HMASTLOCK, dut.core.ExternalStall);
 `ifdef GATE_LEVEL
       $dumpports(dut.core_gate,"core_gate.vcd");

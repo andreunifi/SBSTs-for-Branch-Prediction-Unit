@@ -73,6 +73,9 @@ _start:
 	call atexit
 	call __libc_init_array
 
+  li t0, 0x1FF        # enable cycle, instret, hpm3..hpm8
+  csrw mcounteren, t0
+  
 /* call main */
 	lw a0, 0(sp)                    /* a0 = argc */
 	li a1, 0                        /* a1 = argv */

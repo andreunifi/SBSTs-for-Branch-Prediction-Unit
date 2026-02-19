@@ -1,1 +1,0 @@
--f ../netlist.f +timescale+override+1ns/1ps +top+wallypipelinedcore+strobe +sv +notimingchecks +define+ZOIX +define+TOPLEVEL=wallypipelinedcore +suppress+cell +delay_mode_fault +verbose+undriven -l zoix_compile.log

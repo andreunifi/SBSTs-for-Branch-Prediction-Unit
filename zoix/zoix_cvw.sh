@@ -29,4 +29,4 @@ zoix -f ../netlist.f  +timescale+override+1ns/1ps \
 
 #3 run fault simulation
 fmsh  -load ../fault_sim_cvw.fmsh
-fault_report +group+detail
+fault_report +group+detail +module+wallypipelinedcore_gate.core.ifu.bpred
