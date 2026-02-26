@@ -567,12 +567,12 @@ sec11_end:
 
 	csrr t3, cycle
 	csrr t4, time
-	csrr t5, 0xB04
-	csrr t6, 0xB05
-	csrr s2, 0xB06
-	csrr s3, 0xB07
-	csrr s4, 0xB08
-	csrr s5, 0xB09
+	csrr t5, 0xB04            # hpmcounter4 (class mispredictions)
+	csrr t6, 0xB05            # hpmcounter5 (BTB target wrong)
+	csrr s2, 0xB06            # hpmcounter6 (RAS target wrong)
+	csrr s3, 0xB07            # hpmcounter7 (direction wrong)
+	csrr s4, 0xB08            # hpmcounter8 (BP wrong)
+	csrr s5, 0xB09            # hpmcounter9
 
 	# =================================================================
 	# Signature output
