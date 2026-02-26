@@ -41,32 +41,6 @@ SECTIONS
 
   .text : { *(.text) }
 
-
-   /* ---- Jump stubs go AFTER all growing sections ---- */
-  . = 0x80006820;
-  .jumptk0 : { KEEP(*(.jumptk0)) }
-
-  . = 0x80006864;
-  .jumptk1 : { KEEP(*(.jumptk1)) }
-
-  . = 0x800068A8;
-  .jumptk2 : { KEEP(*(.jumptk2)) }
-
-  . = 0x800068EC;
-  .jumptk3 : { KEEP(*(.jumptk3)) }
-
-  . = 0x80006930;
-  .jumptk4 : { KEEP(*(.jumptk4)) }
-
-  . = 0x80006974;
-  .jumptk5 : { KEEP(*(.jumptk5)) }
-
-  . = 0x800069B8;
-  .jumptk6 : { KEEP(*(.jumptk6)) }
-
-  . = 0x800069FC;
-  .jumptk7 : { KEEP(*(.jumptk7)) }
-
   /* data segment */
   /* .data : { *(.data) } */
   .data :
