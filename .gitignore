@@ -188,4 +188,4 @@ docs/docker/testvector-generation
 
 gate/
 zoix/*.txt
-zoix/run*
+zoix/run*_codeql_detected_source_root
