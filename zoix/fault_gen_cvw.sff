@@ -4,15 +4,15 @@ FaultGenerate
 {
     #SAF    
         NA [0,1] {PORT "wallypipelinedcore_gate.ifu.bpred_bpred.**"}
-        Exclude
-        { 
-            NA [0,1] {PORT "wallypipelinedcore_gate.ifu.bpred_bpred.TargetPredictor.**"}
-        }
+        #Exclude
+        #{ 
+        #    NA [0,1] {PORT "wallypipelinedcore_gate.ifu.bpred_bpred.TargetPredictor.**"}
+        #}
 
     #TDF
         NA [R,F] {PORT "wallypipelinedcore_gate.ifu.bpred_bpred.**"}
-        Exclude
-        { 
-            NA [R,F] {PORT "wallypipelinedcore_gate.ifu.bpred_bpred.TargetPredictor.**"}
-        }
+        #Exclude
+        #{ 
+        #    NA [R,F] {PORT "wallypipelinedcore_gate.ifu.bpred_bpred.TargetPredictor.**"}
+        #}
 }

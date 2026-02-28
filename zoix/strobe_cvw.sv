@@ -19,7 +19,7 @@ module strobe;
 
 initial begin 
 
-    #22;
+    #27;
     forever begin 
         
         $fs_strobe(`TOPLEVEL );
