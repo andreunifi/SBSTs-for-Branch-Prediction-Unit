@@ -1,2 +1,4 @@
 [user]
 	name = andreunifi
+[credential]
+	helper = store
