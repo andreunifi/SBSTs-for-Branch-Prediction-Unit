@@ -1599,4 +1599,4 @@ ZICNTR_SUPPORTED        1
 ZIHPM_SUPPORTED         1
 ZICSR_SUPPORTED         1
 COUNTERS                12'd32
-##RAS_SIZE              32'd2
+##RAS_SIZE         32'd2

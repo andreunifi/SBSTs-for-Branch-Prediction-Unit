@@ -1595,8 +1595,6 @@ GPIO_SUPPORTED          0
 UART_SUPPORTED          0
 PLIC_SUPPORTED          0
 SPI_SUPPORTED           0
+COUNTERS                12'd32
 ZICNTR_SUPPORTED        1
 ZIHPM_SUPPORTED         1
-ZICSR_SUPPORTED         1
-COUNTERS                12'd32
-##RAS_SIZE              32'd2
