@@ -189,4 +189,6 @@ docs/docker/testvector-generation
 gate/
 zoix/*.txt
 zoix/run*
+.vscode/
+.vscode-server/
 OLD_WALLY
