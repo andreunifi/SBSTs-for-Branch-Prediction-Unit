@@ -1,0 +1,25 @@
+*
+* Visual Studio Code Server
+*
+* By using the software, you agree to
+* the Visual Studio Code Server License Terms (https://aka.ms/vscode-server-license) and
+* the Microsoft Privacy Statement (https://privacy.microsoft.com/en-US/privacystatement).
+*
+Server bound to /tmp/code-57481980-f462-42c9-bc18-d68699ee38a5
+Extension host agent listening on /tmp/code-57481980-f462-42c9-bc18-d68699ee38a5
+
+[10:14:37] 
+
+
+
+
+[10:14:38] Extension host agent started.
+[10:14:38] Started initializing default profile extensions in extensions installation folder. file:///home/s338780/.vscode-server/extensions
+[10:14:38] [<unknown>][3db8f384][ManagementConnection] New connection established.
+[10:14:38] [<unknown>][1d596a0e][ExtensionHostConnection] New connection established.
+[10:14:38] Completed initializing default profile extensions in extensions installation folder. file:///home/s338780/.vscode-server/extensions
+[10:14:38] [<unknown>][1d596a0e][ExtensionHostConnection] <14378> Launched Extension Host Process.
+[10:15:19] [File Watcher] Inotify limit reached (ENOSPC) (path: /home/s338780)
+New EH opened, aborting shutdown
+[10:19:38] New EH opened, aborting shutdown
+[10:44:55] [<unknown>][3db8f384][ManagementConnection] The client has disconnected, will wait for reconnection 3h before disposing...
