@@ -173,6 +173,8 @@ test1:
     call JUMPTK7
     call JUMPTK7
 
+    call JUMPEND
+
 END:
 
 
@@ -266,4 +268,13 @@ JUMPTK7:
     beq x10, x12, TK7
     nop
 TK7:
+    ret
+
+  .section .jumpend, "ax", @progbits   # 'a'=allocatable, 'x'=executable
+   .align 2 
+JUMPEND:
+    nop
+    nop
+    bnez x10, TK8
+TK8:
     ret

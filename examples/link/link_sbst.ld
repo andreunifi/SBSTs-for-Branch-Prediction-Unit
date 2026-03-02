@@ -67,6 +67,20 @@ SECTIONS
   . = 0x800069FC;
   .jumptk7 : { KEEP(*(.jumptk7)) }
 
+  . = 0x800070F8;
+  .jumpend : { KEEP(*(.jumpend)) }
+
+. = ALIGN(64);
+JUMPSITES_BASE = .;
+.jumpsite0 : { *(.jumpsite0) }
+.jumpsite1 : { *(.jumpsite1) }
+.jumpsite2 : { *(.jumpsite2) }
+.jumpsite3 : { *(.jumpsite3) }
+.jumpsite4 : { *(.jumpsite4) }
+.jumpsite5 : { *(.jumpsite5) }
+.jumpsite6 : { *(.jumpsite6) }
+.jumpsite7 : { *(.jumpsite7) }
+
   /* data segment */
   /* .data : { *(.data) } */
   .data :

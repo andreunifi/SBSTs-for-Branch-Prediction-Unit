@@ -53,12 +53,14 @@ int main(void)
 			//This checks HPM values
 			signatures[TEST2] = test2();
 			uint32_t test_sig = test3();
+			signatures[TEST4] = test4();
 			//RUn test1() to check for misprediction
 			uint32_t hpm_after = compute_signature();
 			//
 			signatures[i] = hpm_after - hpm_before;
 
 			register uint32_t dbg asm("t0") = signatures[i]; //check it manually 
+			
 		}
 
 		fails += signatures[i] != GOLDEN_SIGNATURES[i];
