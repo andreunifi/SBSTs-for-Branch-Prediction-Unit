@@ -678,6 +678,10 @@ add wave -noupdate /testbench/dut/core/ifu/bus/icache/icache/cachefsm/FlushStage
 add wave -noupdate /testbench/dut/core/lsu/bus/dcache/dcache/vict/cacheLRU/LRUWriteEn
 add wave -noupdate /testbench/dut/core/lsu/bus/dcache/dcache/vict/cacheLRU/FlushStage
 add wave -noupdate /testbench/dut/core/ifu/bpred/bpred/TargetPredictor/memory/ram/RAM
+add wave -noupdate /testbench/dut/core/ifu/bpred/bpred/IClassM
+add wave -noupdate /testbench/dut/core/ifu/bpred/bpred/IEUAdrM
+add wave -noupdate /testbench/dut/core/ifu/bpred/bpred/TargetPredictor/memory/wa2
+add wave -noupdate /testbench/dut/core/ifu/bpred/bpred/TargetPredictor/memory/we2
 TreeUpdate [SetDefaultTree]
 WaveRestoreCursors {{Cursor 4} {89834 ns} 1} {{Cursor 4} {79055 ns} 1} {{Cursor 3} {89604 ns} 0}
 quietly wave cursor active 3

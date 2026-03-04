@@ -110,6 +110,45 @@ SITE7:                              # PC[4:2] = 111  →  BTB entry 7
     bnez    a0, .+4
     ret
 
+    .section .jumpsite_test, "ax", @progbits
+SITE_END:
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    ret
+
+    .section .write1, "ax", @progbits
+SITE_WRITE1:
+    bnez    a0, .+4
+    bnez    a0, .+4
+    bnez    a0, .+4
+    bnez    a0, .+4
+    bnez    a0, .+4
+    bnez    a0, .+4
+    bnez    a0, .+4
+    bnez    a0, .+4
+    ret
+
+    .section .write0, "ax", @progbits
+SITE_WRITE0:
+    bnez    a0, .+4
+    bnez    a0, .+4
+    bnez    a0, .+4
+    bnez    a0, .+4
+    bnez    a0, .+4
+    bnez    a0, .+4
+    bnez    a0, .+4
+    bnez    a0, .+4
+    ret
+
+
+
 # =============================================================================
 # MAIN TEST BODY
 # =============================================================================
@@ -341,6 +380,30 @@ test4:
     SNAP_MISP s1            # snapshot after phase 3
     sub     a3, s1, s0
     add     a2, a2, a3
+
+
+    #CALL   SITE_END             # ensure all branches complete before final snapshot
+
+
+    SNAP_MISP s0            # snapshot before phase 3
+
+    li     a0, 0    
+    call   SITE_WRITE0           # ensure all branches complete before reading counter
+
+    SNAP_MISP s0            # snapshot before phase 3
+
+
+    li     a0, 1
+    call   SITE_WRITE1
+
+    SNAP_MISP s0            # snapshot before phase 3
+
+
+    li     a0, 0
+    call   SITE_WRITE0
+
+    SNAP_MISP s0            # snapshot before phase 3
+
 
     # ----- return total misprediction delta -----
     mv      a0, a2

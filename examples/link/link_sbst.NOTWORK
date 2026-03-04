@@ -136,7 +136,6 @@ SECTIONS
   /* End of uninitialized data segment */
   _end = .;
   
-  . = 0x87FFFEE0;
   .write1 : { *(.write1) }
   
 
