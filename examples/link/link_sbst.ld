@@ -137,14 +137,13 @@ SECTIONS
   .hi_b24 : { KEEP(*(.hi_b24)) }
   . = 0x82000000;
   .hi_b25 : { KEEP(*(.hi_b25)) }
-  . = 0x84000000;
-  .hi_b26 : { KEEP(*(.hi_b26)) }
-  . = 0x88000000;
-  .hi_b27 : { KEEP(*(.hi_b27)) }
-  . = 0x90000000;
-  .hi_b28 : { KEEP(*(.hi_b28)) }
-  . = 0x9C000000;
-  .hi9_combo : { KEEP(*(.hi9_combo)) }
+  /* UNCORE_RAM_RANGE=0x07FFFFFF -> max addr 0x87FFFFFF (128MB)          */
+  /* Bits 27-31 unreachable; use 4 pages of bit-26 for RAS/BTB coverage.  */
+  . = 0x84000000;  .hi_b26    : { KEEP(*(.hi_b26)) }    /* bit 26 page 1 */
+  . = 0x85000000;  .hi_b27    : { KEEP(*(.hi_b27)) }    /* bit 26 page 2 */
+  . = 0x86000000;  .hi_b28    : { KEEP(*(.hi_b28)) }    /* bit 26 page 3 */
+  . = 0x87000000;  .hi9_combo : { KEEP(*(.hi9_combo)) } /* bit 26 page 4 */
+
   . = 0x800F0000;
   .hi_combo_lo : { KEEP(*(.hi_combo_lo)) }
   . = 0x80F00000;

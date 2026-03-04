@@ -49,15 +49,16 @@
 # LINKER REQUIREMENTS:
 #   . = 0x84000000;  .hi_b26    : { KEEP(*(.hi_b26)) }
 #   . = 0x88000000;  .hi_b27    : { KEEP(*(.hi_b27)) }
-#   . = 0x90000000;  .hi_b28    : { KEEP(*(.hi_b28)) }
-#   . = 0x9C000000;  .hi9_combo : { KEEP(*(.hi9_combo)) }
+#   . = 0x8C000000;  .hi_b2627  : { KEEP(*(.hi_b28)) }   <- bits 26+27
+#   . = 0x8E000000;  .hi9_combo : { KEEP(*(.hi9_combo)) } <- bits 26+27 alt page
 #
-# NOTE on bits 29-31:
-#   Bit 29 requires code at 0xA0000000 which is at the boundary of
-#   UNCORE_RAM_RANGE (base 0x80000000, range 0x1FFFFFFF -> max 0x9FFFFFFF).
-#   Bits 30-31 are out of range (bit 31 is always 1 -> SA-1 untestable).
-#   To cover bit 29, extend UNCORE_RAM_RANGE to 64'h3FFFFFFF in derivlist
-#   and add a .hi_b29 section at 0xA0000000.
+# NOTE on bit 28:
+#   Bit 28 requires code at 0x90000000, but the RAM window is only 256MB
+#   (0x80000000..0x8FFFFFFF). Bit 28 is structurally untestable without
+#   extending UNCORE_RAM_RANGE in the testbench.
+#   Bits 29-31 are similarly out of range.
+#   To cover bit 28, extend UNCORE_RAM_RANGE to 64'h1FFFFFFF (512MB) and
+#   reinstate .hi_b28 at 0x90000000 and .hi9_combo at 0x9C000000.
 #
 # SIGNATURE: a0 = s11 (XOR/ADD accumulator, deterministic)
 ##############################################################################
@@ -123,7 +124,10 @@ test9:
     xor   s11, s11, a0
 
     #=========================================================================
-    # BIT 27: code at 0x88000000  (UNCORE_RAM offset 0x08000000)
+    # BIT 26 page-2: code at 0x85000000  (bit 26 still set, different page)
+    # UNCORE_RAM_RANGE=0x07FFFFFF -> max 0x87FFFFFF.
+    # Bit 27 (0x88000000) and bit 28 (0x90000000) are OUT OF RANGE.
+    # Use 0x85000000 as a second bit-26 page to exercise more BTB/RAS slots.
     #=========================================================================
 
     call  hi_b27_n1
@@ -151,7 +155,7 @@ test9:
     xor   s11, s11, a0
 
     #=========================================================================
-    # BIT 28: code at 0x90000000  (UNCORE_RAM offset 0x10000000)
+    # BIT 26 page-3: code at 0x86000000  (bit 26 set, third distinct page)
     #=========================================================================
 
     call  hi_b28_n1
@@ -179,8 +183,7 @@ test9:
     xor   s11, s11, a0
 
     #=========================================================================
-    # COMBO (bits 26+27+28 all set): code at 0x9C000000
-    # Tests multi-bit patterns in RAS cells simultaneously.
+    # BIT 26 page-4: code at 0x87000000  (bit 26 set, fourth distinct page)
     #=========================================================================
 
     call  hi9_combo_n1
@@ -464,7 +467,7 @@ btb9_jal_b27_loop:
 
     li    s5, 0
 btb9_jal_b28_loop:
-    call  hi9_btb_stub_b28      # JAL target in .hi_b28 region = bit 28 set
+    call  hi9_btb_stub_b28      # JAL target in .hi_b28 region = bits 26+27 set
     xor   s11, s11, a0
     addi  s5, s5, 1
     blt   s5, s7, btb9_jal_b28_loop
@@ -781,8 +784,9 @@ hi_b26_n16:
     lw    ra, 0(sp);   addi sp, sp, 4;  ret
 
 #=============================================================================
-# hi_b27 chain: 16-deep nested calls placed at 0x88000000
-# (UNCORE_RAM_BASE | (1<<27))
+# hi_b27 chain: 16-deep nested calls at 0x85000000
+# (UNCORE_RAM_BASE | 0x05000000) -- bit 26 still set, different page
+# UNCORE_RAM_RANGE=0x07FFFFFF: bit 27 (0x88000000) is OUT OF RANGE.
 #=============================================================================
 .section .hi_b27,"ax",@progbits
 .align 2
@@ -892,8 +896,8 @@ hi_b27_n16:
     lw    ra, 0(sp);   addi sp, sp, 4;  ret
 
 #=============================================================================
-# hi_b28 chain: 16-deep nested calls placed at 0x90000000
-# (UNCORE_RAM_BASE | (1<<28))
+# hi_b28 chain: 16-deep nested calls at 0x86000000
+# (bit 26 set, third page; bit 27/28 unreachable with UNCORE_RAM_RANGE=0x07FFFFFF)
 #=============================================================================
 .section .hi_b28,"ax",@progbits
 .align 2
@@ -1003,9 +1007,8 @@ hi_b28_n16:
     lw    ra, 0(sp);   addi sp, sp, 4;  ret
 
 #=============================================================================
-# hi9_combo chain: 16-deep nested calls at 0x9C000000
-# (UNCORE_RAM_BASE | (1<<26) | (1<<27) | (1<<28) = 0x9C000000)
-# Tests multi-bit simultaneous patterns: bits 26, 27, AND 28 all = 1.
+# hi9_combo chain: 16-deep nested calls at 0x87000000
+# (bit 26 set, fourth page; exercises yet more BTB/RAS hash slots)
 #=============================================================================
 .section .hi9_combo,"ax",@progbits
 .align 2
