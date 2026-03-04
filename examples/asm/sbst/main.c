@@ -53,6 +53,12 @@ int main(void)
 			//This checks HPM values
 			signatures[TEST2] = test2();
 			uint32_t test_sig = test3();
+			uint32_t test_sig4 = test4();
+			uint32_t test_sig5 = test5();
+			uint32_t test_sig6 = test6();
+			uint32_t test_sig7 = test7();
+			uint32_t test_sig8 = test8();
+			uint32_t test_sig9 = test9();
 			//RUn test1() to check for misprediction
 			uint32_t hpm_after = compute_signature();
 			//

@@ -1,0 +1,658 @@
+##############################################################################
+# sbst5.S  -  SBST targeting the full RASPredictor module (Wally CVW)
+#
+# TARGET COMPONENTS (14,616 faults total, 33% ND in baseline):
+#
+#   Component              Faults    ND (T1)   Root cause
+#   ─────────────────────────────────────────────────────────────────────
+#   memory (RAS storage)    6,425    1,791     Bits [14:2] never activated;
+#                                              bits [31:15] structurally AU
+#   genblk3_RASTargetEReg     690      223     Return address bits [14:2] fixed
+#   genblk3_RASTargetDReg     690      222     Same, D-stage pipeline register
+#   BTBTargetEReg             690      204     BTB target bits [14:2] fixed
+#   BTBD                      690      204     Same, BTB data memory cells
+#   IEUAdrWReg                684      216     JALR targets never diversified
+#   PTR / PtrMux              140       11     Pointer wrap never exercised
+#   InstrClassReg (x4)        424       56     Instruction-class states missed
+#   PredictionReg (x3)        228       24     Predictor counter states missed
+#   U-cells (glue logic)    ~4,275   ~1,875    Cascade from data path faults
+#
+# STRATEGY - five phases:
+#
+#   Phase 1 – Deep recursive fill (16 levels)
+#     Populates all RAS entries with diverse .text addresses, activating
+#     the write path through every memory cell and all upper address bits.
+#
+#   Phase 2 – RAS walking-1 on bits [14:2] of return address
+#     A 32 KB-aligned section (.ras_walk_t5) guarantees BASE_RAS[14:0]=0.
+#     13 "jal ra, leaf" instructions at offsets 0x0000/0x0004/0x000C/...
+#     /0x3FFC produce return addresses with a single bit set in [14:2].
+#     SA-0/SA-1 on any bit k of genblk3_RASTargetEReg, RASTargetDReg, or
+#     memory causes prediction != RA → misprediction → HPM increment.
+#
+#   Phase 3 – BTB target walking-1 on bits [14:2] of branch target
+#     A 32 KB-aligned section (.btb_walk_t5) places 13 micro-stubs
+#     ("jr s9") at offsets BASE_BTB+0x0004 ... BASE_BTB+0x4000.
+#     Each stub is reached via "jal x0, stub" TWICE:
+#       1st exec → BTB cold miss, trains BTB with target = stub_addr
+#       2nd exec → BTB warm hit → BTBTargetEReg = BASE_BTB + 2^k
+#     SA-0/SA-1 on bit k → BTBTargetEReg != IEU computed target
+#     → misprediction → HPM increment.  Covers BTBTargetEReg + BTBD.
+#
+#   Phase 4 – JALR walking-1 on bits [14:2] of IEUAdrWReg
+#     Reuses the same BTB stubs.  "jalr x0, t0, 0" with t0=BASE_BTB+2^k
+#     is executed twice per bit (fresh BTB training for each JALR PC).
+#     SA-0/SA-1 on bit k of IEUAdrWReg → mismatch vs BTB prediction
+#     → misprediction → HPM increment.  Covers IEUAdrWReg.
+#
+#   Phase 5 – RAS overflow/underflow
+#     20-level recursion overflows the 16-entry circular RAS, exercising
+#     pointer wrap-around in PtrMux and PTR.
+#
+# SIGNATURE: delta of HPM misprediction counters (hpmcounter4 / hpmcounter5).
+#   Fault-free case : all predictions correct, delta = 0.
+#   Fault present   : one or more mispredictions, delta > 0.
+#
+# ABI: standard RISC-V calling convention; all callee-saved regs preserved.
+#      Stack frame is 112 bytes, 16-byte aligned at function entry.
+#
+# ALIGNMENT REQUIREMENTS:
+#   Both walk sections MUST be placed at 32 KB boundaries.  Add to linker
+#   script:
+#       .ras_walk_t5 : ALIGN(32768) { *(.ras_walk_t5) }
+#       .btb_walk_t5 : ALIGN(32768) { *(.btb_walk_t5) }
+#
+# REGISTER MAP (callee-saved, set once, valid throughout test5):
+#   s0  – frame pointer
+#   s1  – HPM baseline: hpmcounter4
+#   s2  – HPM baseline: hpmcounter5
+#   s9  – BTB/JALR stub continuation address (set before each jal/jalr)
+#   s10 – RAS walk continuation address (set before phase 2 jump)
+#   s11 – running signature accumulator
+##############################################################################
+
+# ============================================================
+# .text  -  main test entry + helper subroutines
+# ============================================================
+.section .text
+.global test5
+.type   test5, @function
+
+test5:
+    #-- ABI prologue: 112-byte frame, 16-byte aligned --------
+    addi  sp,  sp, -112
+    sw    ra,  104(sp)
+    sw    s0,   96(sp)
+    sw    s1,   88(sp)
+    sw    s2,   80(sp)
+    sw    s3,   72(sp)
+    sw    s4,   64(sp)
+    sw    s5,   56(sp)
+    sw    s6,   48(sp)
+    sw    s7,   40(sp)
+    sw    s8,   32(sp)
+    sw    s9,   24(sp)
+    sw    s10,  16(sp)
+    sw    s11,   8(sp)
+    addi  s0,  sp, 112
+
+    #-- Initialize running signature -------------------------
+    li    s11, 0xBA5E0000
+
+    #-- HPM baseline snapshot --------------------------------
+    csrr  s1, hpmcounter4
+    csrr  s2, hpmcounter5
+
+    # =========================================================
+    # PHASE 1: Deep recursive RAS fill  (depth = 16)
+    #
+    #   Fills all 16 RAS entries with return addresses from .text,
+    #   exercising the full write path of every memory cell and
+    #   exposing natural bit variation in address bits [31:15].
+    # =========================================================
+    li    a0, 0
+    li    a1, 16
+    call  ras_t5_deep
+
+    # =========================================================
+    # PHASE 2: RAS walking-1 on bits [14:2] of return address
+    #
+    #   s10 carries the continuation address; the walk section
+    #   ends with "jr s10".  We enter via an unconditional J
+    #   (not CALL) so that the first instruction of the walk
+    #   section is exactly at BASE_RAS + 0x0000.
+    # =========================================================
+    la    s10, test5_ras_done
+    j     ras_t5_walk               # enter at BASE_RAS + 0x0000
+
+test5_ras_done:
+    xor   s11, s11, ra              # fold last return address into sig
+
+    # =========================================================
+    # PHASE 3: BTB target walking-1 on bits [14:2]
+    #
+    #   Double-execute each stub:
+    #     1st "jal x0, stub" → BTB cold miss; CPU discovers and
+    #         trains the target; stub jumps back via "jr s9".
+    #     2nd "jal x0, stub" → BTB warm hit; BTBTargetEReg = stub
+    #         address = BASE_BTB + 2^k.  SA-0/SA-1 on bit k →
+    #         BTBTargetEReg != IEU computed target → misprediction.
+    #
+    #   s9 is loaded with the continuation label before each jal.
+    #   Note: "jal x0, target" does NOT push/pop the RAS.
+    # =========================================================
+
+    # -- bit 2: BTBTargetEReg = BASE_BTB + 0x0004 --
+    la    s9, btb5_b2_r1
+    jal   x0, btb_stub_bit2
+btb5_b2_r1:
+    la    s9, btb5_b2_r2
+    jal   x0, btb_stub_bit2
+btb5_b2_r2:
+
+    # -- bit 3: BTBTargetEReg = BASE_BTB + 0x0008 --
+    la    s9, btb5_b3_r1
+    jal   x0, btb_stub_bit3
+btb5_b3_r1:
+    la    s9, btb5_b3_r2
+    jal   x0, btb_stub_bit3
+btb5_b3_r2:
+
+    # -- bit 4: BTBTargetEReg = BASE_BTB + 0x0010 --
+    la    s9, btb5_b4_r1
+    jal   x0, btb_stub_bit4
+btb5_b4_r1:
+    la    s9, btb5_b4_r2
+    jal   x0, btb_stub_bit4
+btb5_b4_r2:
+
+    # -- bit 5: BTBTargetEReg = BASE_BTB + 0x0020 --
+    la    s9, btb5_b5_r1
+    jal   x0, btb_stub_bit5
+btb5_b5_r1:
+    la    s9, btb5_b5_r2
+    jal   x0, btb_stub_bit5
+btb5_b5_r2:
+
+    # -- bit 6: BTBTargetEReg = BASE_BTB + 0x0040 --
+    la    s9, btb5_b6_r1
+    jal   x0, btb_stub_bit6
+btb5_b6_r1:
+    la    s9, btb5_b6_r2
+    jal   x0, btb_stub_bit6
+btb5_b6_r2:
+
+    # -- bit 7: BTBTargetEReg = BASE_BTB + 0x0080 --
+    la    s9, btb5_b7_r1
+    jal   x0, btb_stub_bit7
+btb5_b7_r1:
+    la    s9, btb5_b7_r2
+    jal   x0, btb_stub_bit7
+btb5_b7_r2:
+
+    # -- bit 8: BTBTargetEReg = BASE_BTB + 0x0100 --
+    la    s9, btb5_b8_r1
+    jal   x0, btb_stub_bit8
+btb5_b8_r1:
+    la    s9, btb5_b8_r2
+    jal   x0, btb_stub_bit8
+btb5_b8_r2:
+
+    # -- bit 9: BTBTargetEReg = BASE_BTB + 0x0200 --
+    la    s9, btb5_b9_r1
+    jal   x0, btb_stub_bit9
+btb5_b9_r1:
+    la    s9, btb5_b9_r2
+    jal   x0, btb_stub_bit9
+btb5_b9_r2:
+
+    # -- bit 10: BTBTargetEReg = BASE_BTB + 0x0400 --
+    la    s9, btb5_b10_r1
+    jal   x0, btb_stub_bit10
+btb5_b10_r1:
+    la    s9, btb5_b10_r2
+    jal   x0, btb_stub_bit10
+btb5_b10_r2:
+
+    # -- bit 11: BTBTargetEReg = BASE_BTB + 0x0800 --
+    la    s9, btb5_b11_r1
+    jal   x0, btb_stub_bit11
+btb5_b11_r1:
+    la    s9, btb5_b11_r2
+    jal   x0, btb_stub_bit11
+btb5_b11_r2:
+
+    # -- bit 12: BTBTargetEReg = BASE_BTB + 0x1000 --
+    la    s9, btb5_b12_r1
+    jal   x0, btb_stub_bit12
+btb5_b12_r1:
+    la    s9, btb5_b12_r2
+    jal   x0, btb_stub_bit12
+btb5_b12_r2:
+
+    # -- bit 13: BTBTargetEReg = BASE_BTB + 0x2000 --
+    la    s9, btb5_b13_r1
+    jal   x0, btb_stub_bit13
+btb5_b13_r1:
+    la    s9, btb5_b13_r2
+    jal   x0, btb_stub_bit13
+btb5_b13_r2:
+
+    # -- bit 14: BTBTargetEReg = BASE_BTB + 0x4000 --
+    la    s9, btb5_b14_r1
+    jal   x0, btb_stub_bit14
+btb5_b14_r1:
+    la    s9, btb5_b14_r2
+    jal   x0, btb_stub_bit14
+btb5_b14_r2:
+
+    # =========================================================
+    # PHASE 4: JALR walking-1 on bits [14:2] of IEUAdrWReg
+    #
+    #   "jalr x0, t0, 0" with t0 = BASE_BTB + 2^k.  Each JALR
+    #   instruction is at a fresh PC so the BTB has no prior entry
+    #   → two executions needed (same cold-miss + warm-hit logic).
+    #   On the 2nd exec: BTBTargetEReg = predicted target (correct);
+    #   IEUAdrWReg = t0 = BASE_BTB + 2^k.  SA-0/SA-1 on bit k of
+    #   IEUAdrWReg → mismatch with BTBTargetEReg → misprediction.
+    #
+    #   Note: "jalr x0, t0, 0" does NOT push/pop the RAS.
+    #   t0 is stable between the two jalr instructions (only la s9
+    #   executes in between, which writes s9 not t0).
+    # =========================================================
+
+    # -- bit 2: IEUAdrWReg = BASE_BTB + 0x0004 --
+    la    t0, btb_stub_bit2
+    la    s9, jalr5_b2_r1
+    jalr  x0, t0, 0
+jalr5_b2_r1:
+    la    s9, jalr5_b2_r2
+    jalr  x0, t0, 0
+jalr5_b2_r2:
+
+    # -- bit 3: IEUAdrWReg = BASE_BTB + 0x0008 --
+    la    t0, btb_stub_bit3
+    la    s9, jalr5_b3_r1
+    jalr  x0, t0, 0
+jalr5_b3_r1:
+    la    s9, jalr5_b3_r2
+    jalr  x0, t0, 0
+jalr5_b3_r2:
+
+    # -- bit 4 --
+    la    t0, btb_stub_bit4
+    la    s9, jalr5_b4_r1
+    jalr  x0, t0, 0
+jalr5_b4_r1:
+    la    s9, jalr5_b4_r2
+    jalr  x0, t0, 0
+jalr5_b4_r2:
+
+    # -- bit 5 --
+    la    t0, btb_stub_bit5
+    la    s9, jalr5_b5_r1
+    jalr  x0, t0, 0
+jalr5_b5_r1:
+    la    s9, jalr5_b5_r2
+    jalr  x0, t0, 0
+jalr5_b5_r2:
+
+    # -- bit 6 --
+    la    t0, btb_stub_bit6
+    la    s9, jalr5_b6_r1
+    jalr  x0, t0, 0
+jalr5_b6_r1:
+    la    s9, jalr5_b6_r2
+    jalr  x0, t0, 0
+jalr5_b6_r2:
+
+    # -- bit 7 --
+    la    t0, btb_stub_bit7
+    la    s9, jalr5_b7_r1
+    jalr  x0, t0, 0
+jalr5_b7_r1:
+    la    s9, jalr5_b7_r2
+    jalr  x0, t0, 0
+jalr5_b7_r2:
+
+    # -- bit 8 --
+    la    t0, btb_stub_bit8
+    la    s9, jalr5_b8_r1
+    jalr  x0, t0, 0
+jalr5_b8_r1:
+    la    s9, jalr5_b8_r2
+    jalr  x0, t0, 0
+jalr5_b8_r2:
+
+    # -- bit 9 --
+    la    t0, btb_stub_bit9
+    la    s9, jalr5_b9_r1
+    jalr  x0, t0, 0
+jalr5_b9_r1:
+    la    s9, jalr5_b9_r2
+    jalr  x0, t0, 0
+jalr5_b9_r2:
+
+    # -- bit 10 --
+    la    t0, btb_stub_bit10
+    la    s9, jalr5_b10_r1
+    jalr  x0, t0, 0
+jalr5_b10_r1:
+    la    s9, jalr5_b10_r2
+    jalr  x0, t0, 0
+jalr5_b10_r2:
+
+    # -- bit 11 --
+    la    t0, btb_stub_bit11
+    la    s9, jalr5_b11_r1
+    jalr  x0, t0, 0
+jalr5_b11_r1:
+    la    s9, jalr5_b11_r2
+    jalr  x0, t0, 0
+jalr5_b11_r2:
+
+    # -- bit 12 --
+    la    t0, btb_stub_bit12
+    la    s9, jalr5_b12_r1
+    jalr  x0, t0, 0
+jalr5_b12_r1:
+    la    s9, jalr5_b12_r2
+    jalr  x0, t0, 0
+jalr5_b12_r2:
+
+    # -- bit 13 --
+    la    t0, btb_stub_bit13
+    la    s9, jalr5_b13_r1
+    jalr  x0, t0, 0
+jalr5_b13_r1:
+    la    s9, jalr5_b13_r2
+    jalr  x0, t0, 0
+jalr5_b13_r2:
+
+    # -- bit 14 --
+    la    t0, btb_stub_bit14
+    la    s9, jalr5_b14_r1
+    jalr  x0, t0, 0
+jalr5_b14_r1:
+    la    s9, jalr5_b14_r2
+    jalr  x0, t0, 0
+jalr5_b14_r2:
+
+    # =========================================================
+    # PHASE 5: RAS overflow / underflow  (PtrMux and PTR)
+    #
+    #   Push 20 return addresses (> 16-entry RAS depth) → the
+    #   circular pointer wraps from 15 → 0 → 3, exercising the
+    #   modular-increment path through PtrMux and PTR.
+    #   The symmetric unwind pops 20 addresses, exercising the
+    #   modular-decrement path (pointer underflow side).
+    # =========================================================
+    li    a0, 0
+    li    a1, 20
+    call  ras_t5_overflow
+
+    # =========================================================
+    # Compute final signature = HPM misprediction delta
+    # =========================================================
+    csrr  t5, hpmcounter4
+    csrr  t6, hpmcounter5
+    sub   t5, t5, s1
+    sub   t6, t6, s2
+    add   s11, s11, t5
+    add   s11, s11, t6
+
+    mv    a0, s11
+
+    #-- ABI epilogue ------------------------------------------
+    lw    s11,   8(sp)
+    lw    s10,  16(sp)
+    lw    s9,   24(sp)
+    lw    s8,   32(sp)
+    lw    s7,   40(sp)
+    lw    s6,   48(sp)
+    lw    s5,   56(sp)
+    lw    s4,   64(sp)
+    lw    s3,   72(sp)
+    lw    s2,   80(sp)
+    lw    s1,   88(sp)
+    lw    s0,   96(sp)
+    lw    ra,  104(sp)
+    addi  sp,  sp, 112
+    jr    ra
+
+# ------------------------------------------------------------------
+# ras_t5_deep: recursive RAS fill
+#   a0 = current depth counter, a1 = max depth
+# ------------------------------------------------------------------
+ras_t5_deep:
+    addi  sp, sp, -4
+    sw    ra, 0(sp)
+    addi  a0, a0, 1
+    bge   a0, a1, ras_t5_deep_base
+    call  ras_t5_deep
+ras_t5_deep_base:
+    lw    ra, 0(sp)
+    addi  sp, sp, 4
+    ret
+
+# ------------------------------------------------------------------
+# ras_t5_overflow: recursive overflow (a1 > RAS depth = 16)
+#   a0 = current depth counter, a1 = max depth
+# ------------------------------------------------------------------
+ras_t5_overflow:
+    addi  sp, sp, -4
+    sw    ra, 0(sp)
+    addi  a0, a0, 1
+    bge   a0, a1, ras_t5_ov_base
+    call  ras_t5_overflow
+ras_t5_ov_base:
+    lw    ra, 0(sp)
+    addi  sp, sp, 4
+    ret
+
+
+# ==================================================================
+# .ras_walk_t5  -  RAS walking-1 section
+#
+# CRITICAL: .balign 32768 ensures BASE_RAS[14:0] = 0, so that
+#           BASE_RAS + 2^k  has a pure walking-1 bit k in [14:2].
+#
+# Entry:  J from test5 (ra is NOT modified by the J instruction).
+# Exit:   jr s10  (continuation address set by test5 in s10).
+#
+# Each "jal ra, ras_t5_leaf_w" at section offset X:
+#   RA  ← BASE_RAS + X + 4          (actual return address)
+#   RAS push(BASE_RAS + X + 4)
+#   ras_t5_leaf_w executes RET  → RAS prediction popped
+#
+#   Fault-free: prediction == RA → no misprediction.
+#   SA-0 on bit k: prediction[k] = 0, RA[k] = 1 → mismatch.
+#   SA-1 on bit k: prediction[k] = 1, RA[k] = 0 → mismatch.
+#   Either case: pipeline flush → HPM misprediction counter ++.
+#
+# Offset map (section offset → bit set in bits[14:2] of RA):
+#   0x0000 → bit 2    0x0004 → bit 3    0x000C → bit 4
+#   0x001C → bit 5    0x003C → bit 6    0x007C → bit 7
+#   0x00FC → bit 8    0x01FC → bit 9    0x03FC → bit 10
+#   0x07FC → bit 11   0x0FFC → bit 12   0x1FFC → bit 13
+#   0x3FFC → bit 14
+#
+# NOP sleds between call islands are dead code, skipped by J.
+# NOP encoding: 0x00000013 (addi x0, x0, 0).
+# Section occupies exactly 16 KB + leaf function (~4 bytes).
+# ==================================================================
+.section .ras_walk_t5, "ax", @progbits
+.balign 32768                       # BASE_RAS[14:0] = 0
+
+ras_t5_walk:                        # BASE_RAS + 0x0000
+
+# -- BIT 2 ----------------------------------------------------------
+    jal   ra, ras_t5_leaf_w         # 0x0000 → RA = BASE_RAS + 0x0004
+
+# -- BIT 3 ----------------------------------------------------------
+    jal   ra, ras_t5_leaf_w         # 0x0004 → RA = BASE_RAS + 0x0008
+
+# -- BIT 4 ----------------------------------------------------------
+    nop                              # 0x0008  (pad)
+    jal   ra, ras_t5_leaf_w         # 0x000C → RA = BASE_RAS + 0x0010
+
+# -- BIT 5 ----------------------------------------------------------
+    j     ras_t5_w5                  # 0x0010
+    .fill  2, 4, 0x00000013         # 0x0014, 0x0018  (skipped)
+ras_t5_w5:                          # 0x001C
+    jal   ra, ras_t5_leaf_w         # 0x001C → RA = BASE_RAS + 0x0020
+
+# -- BIT 6 ----------------------------------------------------------
+    j     ras_t5_w6                  # 0x0020
+    .fill  6, 4, 0x00000013         # 0x0024..0x0038  (skipped)
+ras_t5_w6:                          # 0x003C
+    jal   ra, ras_t5_leaf_w         # 0x003C → RA = BASE_RAS + 0x0040
+
+# -- BIT 7 ----------------------------------------------------------
+    j     ras_t5_w7                  # 0x0040
+    .fill 14, 4, 0x00000013         # 0x0044..0x0078  (skipped)
+ras_t5_w7:                          # 0x007C
+    jal   ra, ras_t5_leaf_w         # 0x007C → RA = BASE_RAS + 0x0080
+
+# -- BIT 8 ----------------------------------------------------------
+    j     ras_t5_w8                  # 0x0080
+    .fill 30, 4, 0x00000013         # 0x0084..0x00F8  (skipped)
+ras_t5_w8:                          # 0x00FC
+    jal   ra, ras_t5_leaf_w         # 0x00FC → RA = BASE_RAS + 0x0100
+
+# -- BIT 9 ----------------------------------------------------------
+    j     ras_t5_w9                  # 0x0100
+    .fill 62, 4, 0x00000013         # 0x0104..0x01F8  (skipped)
+ras_t5_w9:                          # 0x01FC
+    jal   ra, ras_t5_leaf_w         # 0x01FC → RA = BASE_RAS + 0x0200
+
+# -- BIT 10 ---------------------------------------------------------
+    j     ras_t5_w10                 # 0x0200
+    .fill 126, 4, 0x00000013        # 0x0204..0x03F8  (skipped)
+ras_t5_w10:                         # 0x03FC
+    jal   ra, ras_t5_leaf_w         # 0x03FC → RA = BASE_RAS + 0x0400
+
+# -- BIT 11 ---------------------------------------------------------
+    j     ras_t5_w11                 # 0x0400
+    .fill 254, 4, 0x00000013        # 0x0404..0x07F8  (skipped)
+ras_t5_w11:                         # 0x07FC
+    jal   ra, ras_t5_leaf_w         # 0x07FC → RA = BASE_RAS + 0x0800
+
+# -- BIT 12 ---------------------------------------------------------
+    j     ras_t5_w12                 # 0x0800
+    .fill 510, 4, 0x00000013        # 0x0804..0x0FF8  (skipped)
+ras_t5_w12:                         # 0x0FFC
+    jal   ra, ras_t5_leaf_w         # 0x0FFC → RA = BASE_RAS + 0x1000
+
+# -- BIT 13 ---------------------------------------------------------
+    j     ras_t5_w13                 # 0x1000
+    .fill 1022, 4, 0x00000013       # 0x1004..0x1FF8  (skipped)
+ras_t5_w13:                         # 0x1FFC
+    jal   ra, ras_t5_leaf_w         # 0x1FFC → RA = BASE_RAS + 0x2000
+
+# -- BIT 14 ---------------------------------------------------------
+    j     ras_t5_w14                 # 0x2000
+    .fill 2046, 4, 0x00000013       # 0x2004..0x3FF8  (skipped)
+ras_t5_w14:                         # 0x3FFC
+    jal   ra, ras_t5_leaf_w         # 0x3FFC → RA = BASE_RAS + 0x4000
+
+    jr    s10                        # 0x4000 – return to test5
+
+ras_t5_leaf_w:                       # 0x4004
+    ret                              # pops RAS prediction; fault-free: OK
+
+
+# ==================================================================
+# .btb_walk_t5  -  BTB target walking-1 stubs
+#
+# CRITICAL: .balign 32768 ensures BASE_BTB[14:0] = 0, so that
+#           BASE_BTB + 2^k  has a pure walking-1 bit k in [14:2].
+#
+# Each stub is a single "jr s9" instruction (JALR x0, s9, 0).
+# The caller (test5 phase 3 and phase 4) loads s9 with the
+# continuation address before each "jal x0, stub" or
+# "jalr x0, t0, 0" that targets this stub.
+#
+# Stub addresses (section offset → bit set in [14:2]):
+#   btb_stub_bit2  = BASE_BTB + 0x0004  → bit 2
+#   btb_stub_bit3  = BASE_BTB + 0x0008  → bit 3
+#   btb_stub_bit4  = BASE_BTB + 0x0010  → bit 4
+#   btb_stub_bit5  = BASE_BTB + 0x0020  → bit 5
+#   btb_stub_bit6  = BASE_BTB + 0x0040  → bit 6
+#   btb_stub_bit7  = BASE_BTB + 0x0080  → bit 7
+#   btb_stub_bit8  = BASE_BTB + 0x0100  → bit 8
+#   btb_stub_bit9  = BASE_BTB + 0x0200  → bit 9
+#   btb_stub_bit10 = BASE_BTB + 0x0400  → bit 10
+#   btb_stub_bit11 = BASE_BTB + 0x0800  → bit 11
+#   btb_stub_bit12 = BASE_BTB + 0x1000  → bit 12
+#   btb_stub_bit13 = BASE_BTB + 0x2000  → bit 13
+#   btb_stub_bit14 = BASE_BTB + 0x4000  → bit 14
+#
+# Dead NOP filler between stubs is never executed.
+# Section occupies exactly 16 KB (0x0000..0x3FFF).
+# ==================================================================
+.section .btb_walk_t5, "ax", @progbits
+.balign 32768                       # BASE_BTB[14:0] = 0
+
+    .fill 1, 4, 0x00000013          # 0x0000: unused (pad)
+
+btb_stub_bit2:                      # 0x0004
+    jr    s9
+
+btb_stub_bit3:                      # 0x0008
+    jr    s9
+
+    .fill 1, 4, 0x00000013          # 0x000C: pad
+
+btb_stub_bit4:                      # 0x0010  (= 2^4)
+    jr    s9
+
+    .fill 3, 4, 0x00000013          # 0x0014..0x001C: pad
+
+btb_stub_bit5:                      # 0x0020  (= 2^5)
+    jr    s9
+
+    .fill 7, 4, 0x00000013          # 0x0024..0x003C: pad
+
+btb_stub_bit6:                      # 0x0040  (= 2^6)
+    jr    s9
+
+    .fill 15, 4, 0x00000013         # 0x0044..0x007C: pad
+
+btb_stub_bit7:                      # 0x0080  (= 2^7)
+    jr    s9
+
+    .fill 31, 4, 0x00000013         # 0x0084..0x00FC: pad
+
+btb_stub_bit8:                      # 0x0100  (= 2^8)
+    jr    s9
+
+    .fill 63, 4, 0x00000013         # 0x0104..0x01FC: pad
+
+btb_stub_bit9:                      # 0x0200  (= 2^9)
+    jr    s9
+
+    .fill 127, 4, 0x00000013        # 0x0204..0x03FC: pad
+
+btb_stub_bit10:                     # 0x0400  (= 2^10)
+    jr    s9
+
+    .fill 255, 4, 0x00000013        # 0x0404..0x07FC: pad
+
+btb_stub_bit11:                     # 0x0800  (= 2^11)
+    jr    s9
+
+    .fill 511, 4, 0x00000013        # 0x0804..0x0FFC: pad
+
+btb_stub_bit12:                     # 0x1000  (= 2^12)
+    jr    s9
+
+    .fill 1023, 4, 0x00000013       # 0x1004..0x1FFC: pad
+
+btb_stub_bit13:                     # 0x2000  (= 2^13)
+    jr    s9
+
+    .fill 2047, 4, 0x00000013       # 0x2004..0x3FFC: pad
+
+btb_stub_bit14:                     # 0x4000  (= 2^14)
+    jr    s9

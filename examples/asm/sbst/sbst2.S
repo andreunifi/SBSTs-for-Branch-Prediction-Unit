@@ -1,29 +1,49 @@
+##############################################################################
+# sbst2.S  --  BTB stress + branch-type coverage + load/store + CSR writes
+#
+# Phase 1 : BTB sled (64 unique JALs to thrash the 8-entry BTB)
+# Phase 2 : All six branch-condition types (BEQ/BNE/BLT/BGE/BLTU/BGEU)
+# Phase 3 : Dense branching to stress Fetch-Queue buffering
+# Phase 4 : Cache-line boundary jump
+# Phase 5 : Deep RAS recursion (depth 32, overflows 8-entry RAS)
+# Phase 6 : JALR target switch (misprediction via computed target)
+# Phase 7 : [NEW] Byte / halfword load-store with walking-1 data
+# Phase 8 : [NEW] CSR write walking-1 (mscratch; exercises CSR datapath)
+# Phase 9 : [NEW] Multi-cycle dependency chain
+#
+# SIGNATURE: a0 = HPM misprediction delta XOR data signature
+##############################################################################
+
 .section .text
 .global test2
 .type test2, @function
 
 test2:
-	# ABI prologue
-	addi sp, sp, -112     # allocate 112 bytes on the stack
-	sw ra, 104(sp)        # save return address
-	sw s0, 96(sp)         # save callee-saved registers
-	sw s1, 88(sp)
-	sw s2, 80(sp)
-	sw s3, 72(sp)
-	sw s4, 64(sp)
-	sw s5, 56(sp)
-	sw s6, 48(sp)
-	sw s7, 40(sp)
-	sw s8, 32(sp)
-	sw s9, 24(sp)
-	sw s10, 16(sp)
-	sw s11, 8(sp)
-	addi s0, sp, 112     # set up s0 to point to start of stack frame
+    # ABI prologue
+    addi sp, sp, -112
+    sw ra,  104(sp)
+    sw s0,   96(sp)
+    sw s1,   88(sp)
+    sw s2,   80(sp)
+    sw s3,   72(sp)
+    sw s4,   64(sp)
+    sw s5,   56(sp)
+    sw s6,   48(sp)
+    sw s7,   40(sp)
+    sw s8,   32(sp)
+    sw s9,   24(sp)
+    sw s10,  16(sp)
+    sw s11,   8(sp)
+    addi s0, sp, 112
+
+    # HPM baseline
+    csrr s1, hpmcounter4
+    csrr s2, hpmcounter5
+    li   s11, 0                     # data signature
 
     # -------------------------------------------------------------------------
-    # 1. BTB Thrash Test ("Mega Sled") - KEEPING THIS (Proven effective)
+    # 1. BTB Thrash Sled -- 64 unique unconditional jumps
     # -------------------------------------------------------------------------
-    # 64 Unique Jumps to fill the Branch Target Buffer
     j btb_00
 btb_00: j btb_01
 btb_01: j btb_02
@@ -88,338 +108,247 @@ btb_59: j btb_60
 btb_60: j btb_61
 btb_61: j btb_62
 btb_62: j btb_63
-btb_63: 
-    nop
+btb_63: nop
 
     # -------------------------------------------------------------------------
-    # 2. Comprehensive Branch Condition Test (New)
+    # 2. All six branch-condition types (Taken paths, exercise comparator)
     # -------------------------------------------------------------------------
-    # Exercises all comparator logic types in the IEU used for branch resolution.
-    
     li t0, 10
     li t1, 20
-    li t2, -5           # 0xFFFFFFFB (Large unsigned, small signed)
+    li t2, -5           # large unsigned value
 
-    # BEQ (Taken)
-    csrr t3,cycle    # Prevent optimization removal
-    csrr t4,time
-    csrr t5 ,0xB04
-    csrr t6 ,0xB05
-    csrr s2 ,0xB06
-    csrr s3 ,0xB07
-    csrr s4 ,0xB08
-    csrr s5 ,0xB09
-
+    # BEQ taken
     beq t0, t0, b_beq
     j test_end
 b_beq:
+    add s11, s11, t0
 
-    csrr t3,cycle    # Prevent optimization removal
-    csrr t4,time
-    csrr t5 ,0xB04
-    csrr t6 ,0xB05
-    csrr s2,0xB06
-    csrr s3 ,0xB07
-    csrr s4 ,0xB08
-    csrr s5 ,0xB09
-    # BNE (Taken)
+    # BNE taken
     bne t0, t1, b_bne
     j test_end
 b_bne:
-    csrr t3,cycle    # Prevent optimization removal
-    csrr t4,time
-    csrr t5 ,0xB04
-    csrr t6 ,0xB05
-    csrr s2,0xB06
-    csrr s3 ,0xB07
-    csrr s4 ,0xB08
-    csrr s5 ,0xB09
-    # BLT (Signed Less - Taken) 10 < 20
+    add s11, s11, t1
+
+    # BLT taken (10 < 20 signed)
     blt t0, t1, b_blt
     j test_end
 b_blt:
-    csrr t3,cycle    # Prevent optimization removal
-    csrr t4,time
-    csrr t5 ,0xB04
-    csrr t6 ,0xB05
-    csrr s2,0xB06
-    csrr s3 ,0xB07
-    csrr s4 ,0xB08
-    csrr s5 ,0xB09
-    # BGE (Signed Greater/Eq - Taken) 10 >= 10
+    add s11, s11, t0
+
+    # BGE taken (10 >= 10)
     bge t0, t0, b_bge
     j test_end
 b_bge:
-    csrr t3,cycle    # Prevent optimization removal
-    csrr t4,time
-    csrr t5 ,0xB04
-    csrr t6 ,0xB05
-    csrr s2,0xB06
-    csrr s3 ,0xB07
-    csrr s4 ,0xB08
-    csrr s5 ,0xB09
-    # BLTU (Unsigned Less - Taken) 10 < -5 (unsigned huge)
+    add s11, s11, t0
+
+    # BLTU taken (10 < MAXUINT unsigned)
     bltu t0, t2, b_bltu
     j test_end
 b_bltu:
-    csrr t3,cycle    # Prevent optimization removal
-    csrr t4,time
-    csrr t5 ,0xB04
-    csrr t6 ,0xB05
-    csrr s2,0xB06
-    csrr s3 ,0xB07
-    csrr s4 ,0xB08
-    # BGEU (Unsigned Greater - Taken) -5 (huge) >= 10
+    add s11, s11, t2
+
+    # BGEU taken (MAXUINT >= 10 unsigned)
     bgeu t2, t0, b_bgeu
     j test_end
 b_bgeu:
-    csrr t3,cycle    # Prevent optimization removal
-    csrr t4,time
-    csrr t5 ,0xB04
-    csrr t6 ,0xB05
-    csrr s2,0xB06
-    csrr s3 ,0xB07
-    csrr s4 ,0xB08
+    add s11, s11, t2
+
     # -------------------------------------------------------------------------
-    # 3. Dense Branching (New)
+    # 3. Dense branching -- many rapid control-flow changes
     # -------------------------------------------------------------------------
-    # Rapid-fire control flow changes to stress Fetch Queue/Buffering.
     li t0, 0
     beq t0, zero, db_1
     nop
 db_1:
-    csrr t3,cycle    # Prevent optimization removal
-    csrr t4,time
-    csrr t5 ,0xB04
-    csrr t6 ,0xB05
-    csrr s2,0xB06
-    csrr s3 ,0xB07
-    csrr s4 ,0xB08
+    add s11, s11, t0
     bne t0, t1, db_2
     nop
 db_2:
-    csrr t3,cycle    # Prevent optimization removal
-    csrr t4,time
-    csrr t5 ,0xB04
-    csrr t6 ,0xB05
-    csrr s2,0xB06
-    csrr s3 ,0xB07
-    csrr s4 ,0xB08
+    xor s11, s11, t1
     blt t0, t1, db_3
     nop
 db_3:
-    csrr t3,cycle    # Prevent optimization removal
-    csrr t4,time
-    csrr t5 ,0xB04
-    csrr t6 ,0xB05
-    csrr s2,0xB06
-    csrr s3 ,0xB07
-    csrr s4 ,0xB08
-    nop
+    xor s11, s11, t0
 
     # -------------------------------------------------------------------------
-    # 4. Cache Line Boundary Test (New)
+    # 4. Cache-line boundary jump
     # -------------------------------------------------------------------------
-    # Align to 64 bytes. Fill with NOPs until the very end of the line.
-    # Place a jump at the last word of the cache line to test "Next PC" logic crossing.
-    
-    .balign 64          # Align to start of a cache line
-    nop; nop; nop; nop  # 0-15 bytes
-    nop; nop; nop; nop  # 16-31 bytes
-    nop; nop; nop; nop  # 32-47 bytes
-    nop; nop; nop       # 48-59 bytes
-    
-    # This instruction is at offset 60 (bytes 60-63).
-    # It ends exactly at the cache line boundary (64).
-    # The Fetch Unit must calculate the target while handling the line boundary.
-    j boundary_target   
-    
-    nop                 # Should be skipped
-    nop
+    .balign 64
+    nop; nop; nop; nop
+    nop; nop; nop; nop
+    nop; nop; nop; nop
+    nop; nop; nop
+    j boundary_target
+    nop; nop
 boundary_target:
-    csrr t3,cycle    # Prevent optimization removal
-    csrr t4,time
-    csrr t5 ,0xB04
-    csrr t6 ,0xB05
-    csrr s2,0xB06
-    csrr s3 ,0xB07
-    csrr s4 ,0xB08
-    nop
+    add s11, s11, t1
 
     # -------------------------------------------------------------------------
-    # 5. RAS Overflow Test (Keep Deep Recursion)
+    # 5. Deep RAS recursion (depth 32 > 8-entry RAS)
     # -------------------------------------------------------------------------
     li a0, 0
-    li a1, 32           # Depth 32
+    li a1, 32
     jal ra, recursive_deep
     j jalr_test
 
 recursive_deep:
-    csrr t3,cycle    # Prevent optimization removal
-    csrr t4,time
-    csrr t5 ,0xB04
-    csrr t6 ,0xB05
-    csrr s2,0xB06
-    csrr s3 ,0xB07
-    csrr s4 ,0xB08
-
-
     addi sp, sp, -4
-    sw ra, 0(sp)
+    sw   ra, 0(sp)
     addi a0, a0, 1
-    bge a0, a1, recursive_base
-    jal ra, recursive_deep
+    add  s11, s11, a0
+    bge  a0, a1, recursive_base
+    jal  ra, recursive_deep
 recursive_base:
-    csrr t3,cycle    # Prevent optimization removal
-    csrr t4,time
-    csrr t5 ,0xB04
-    csrr t6 ,0xB05
-    csrr s2,0xB06
-    csrr s3 ,0xB07
-    csrr s4 ,0xB08
-
-    lw ra, 0(sp)
+    lw   ra, 0(sp)
     addi sp, sp, 4
     ret
 
     # -------------------------------------------------------------------------
-    # 6. JALR Misprediction (Keep Target Switch)
+    # 6. JALR misprediction via switching target
     # -------------------------------------------------------------------------
 jalr_test:
-    csrr t3,cycle    # Prevent optimization removal
-    csrr t4,time
-    csrr t5 ,0xB04
-    csrr t6 ,0xB05
-    csrr s2,0xB06
-    csrr s3 ,0xB07
-    csrr s4 ,0xB08
-
-
     li t0, 0
     li t1, 6
     li t2, 5
 jalr_loop:
-    csrr t3,cycle    # Prevent optimization removal
-    csrr t4,time
-    csrr t5 ,0xB04
-    csrr t6 ,0xB05
-    csrr s2,0xB06
-    csrr s3 ,0xB07
-    csrr s4 ,0xB08
-
     la t3, target_A
     blt t0, t2, do_jump
-    la t3, target_B     # Switch target on last iteration
+    la t3, target_B
 do_jump:
-    csrr t3,cycle    # Prevent optimization removal
-    csrr t4,time
-    csrr t5 ,0xB04
-    csrr t6 ,0xB05
-    csrr s2,0xB06
-    csrr s3 ,0xB07
-    csrr s4 ,0xB08
-
-    la t3, target_B     # Switch target on last iteration
-
-
+    la t3, target_B
     jalr x0, t3, 0
 
 target_A:
-    csrr t3,cycle    # Prevent optimization removal
-    csrr t4,time
-    csrr t5 ,0xB04
-    csrr t6 ,0xB05
-    csrr s2,0xB06
-    csrr s3 ,0xB07
-    csrr s4 ,0xB08
-
+    addi s11, s11, 1
     addi t0, t0, 1
-    blt t0, t1, jalr_loop
-    j test_end
+    blt  t0, t1, jalr_loop
+    j    lsw_test
 
 target_B:
-    csrr t3,cycle    # Prevent optimization removal
-    csrr t4,time
-    csrr t5 ,0xB04
-    csrr t6 ,0xB05
-    csrr s2,0xB06
-    csrr s3 ,0xB07
-    csrr s4 ,0xB08
-    nop
+    addi s11, s11, 2
 
     # -------------------------------------------------------------------------
-    # Epilogue
+    # 7. [NEW] BYTE / HALFWORD LOAD-STORE WALKING-1
+    # Tests sign/zero-extension paths and narrow-write datapaths in LSU.
+    # Scratch area on stack (16 bytes).
     # -------------------------------------------------------------------------
+lsw_test:
+    addi s3, sp, -16            # use top 16 bytes of stack as scratch
+    # (stack has extra room; s3 points just below current frame)
+    li   s4, 1                  # walking-1
+    li   s5, 0                  # loop counter
+    li   s7, 32
 
+lsw_loop:
+    # Byte operations
+    sb   s4, 0(s3)
+    lb   t0, 0(s3)              # sign-extended
+    lbu  t1, 0(s3)              # zero-extended
+    xor  s11, s11, t0
+    xor  s11, s11, t1
 
-	li t0,4   #Primo address = PCF 29
+    # Halfword operations
+    sh   s4, 4(s3)
+    lh   t2, 4(s3)              # sign-extended
+    lhu  t3, 4(s3)              # zero-extended
+    xor  s11, s11, t2
+    xor  s11, s11, t3
+
+    # Word (full-width)
+    sw   s4, 8(s3)
+    lw   t4, 8(s3)
+    xor  s11, s11, t4
+
+    # Load-use hazard: immediately use loaded value
+    sw   s4, 12(s3)
+    lw   t5, 12(s3)
+    add  t6, t5, s4             # use t5 one cycle after load (load-use stall)
+    xor  s11, s11, t6
+
+    slli s4, s4, 1
+    addi s5, s5, 1
+    blt  s5, s7, lsw_loop
+
+    # -------------------------------------------------------------------------
+    # 8. [NEW] CSR WRITE WALKING-1 (mscratch)
+    # Each write drives a different bit through the CSR write datapath.
+    # -------------------------------------------------------------------------
+    li   s4, 1
+    li   s5, 0
+
+csr_walk_loop:
+    csrw mscratch, s4           # write 2^i to mscratch
+    csrr t0, mscratch           # read back; SA fault → t0 != s4
+    xor  s11, s11, t0
+
+    csrrs t1, mscratch, s4      # set bits
+    csrrc t2, mscratch, s4      # clear bits
+    xor  s11, s11, t1
+    xor  s11, s11, t2
+
+    slli s4, s4, 1
+    addi s5, s5, 1
+    li   s7, 32
+    blt  s5, s7, csr_walk_loop
+
+    # Write alternating patterns to mscratch
+    li   t0, 0xAAAAAAAA
+    csrw mscratch, t0;  csrr t1, mscratch;  xor s11, s11, t1
+    li   t0, 0x55555555
+    csrw mscratch, t0;  csrr t1, mscratch;  xor s11, s11, t1
+    li   t0, 0xFFFFFFFF
+    csrw mscratch, t0;  csrr t1, mscratch;  xor s11, s11, t1
+    csrw mscratch, zero                     # restore
+
+    # -------------------------------------------------------------------------
+    # 9. [NEW] Multi-cycle ALU dependency chain
+    # Exercises EX->EX forwarding with arithmetic diversity
+    # -------------------------------------------------------------------------
+    li   t0, 0x12345678
+    add  t1, t0, t0
+    sub  t2, t1, t0
+    and  t3, t1, t2
+    or   t4, t3, t2
+    xor  t5, t4, t3
+    sll  t6, t5, t3             # shift by forwarded value (low bits)
+    srl  a5, t6, t5
+    sra  a6, a5, t4
+    xor  s11, s11, t1
+    xor  s11, s11, t5
+    xor  s11, s11, a6
+
+    li t0, 4
 test_end:
-    csrr t3,cycle    # Prevent optimization removal
-    csrr t4,time
-    csrr t5 ,0xB04
-    csrr t6 ,0xB05
-    csrr s2,0xB06
-    csrr s3 ,0xB07
-    csrr s4 ,0xB08
-	nop
-	addi t0,t0,-1
-	bnez t0,test_end
+    nop
+    addi t0, t0, -1
+    bnez t0, test_end
 
-
-
-
-
-
-
-
-        # Read the HPM CSRs into temporary registers
-    csrr t5, 0xB04     # HPM0
-    csrr t6, 0xB05     # HPM1
-    csrr s2, 0xB06     # HPM2
-    csrr s3, 0xB07     # HPM3
-    csrr s4, 0xB08     # HPM4
-
-    # Combine them into a single signature (sum example)
-    add t5, t5, t6     # t5 = t5 + t6
-    add t5, t5, s2     # t5 = t5 + s2
-    add t5, t5, s3     # t5 = t5 + s3
-    add t5, t5, s4     # t5 = t5 + s4
-
+    # Final signature: HPM delta XOR data
     csrr t5, hpmcounter4
     csrr t6, hpmcounter5
-    csrr s2, hpmcounter6
-    csrr s3, hpmcounter7
-    csrr s4, hpmcounter8
+    sub  t5, t5, s1
+    sub  t6, t6, s2
+    xor  s11, s11, t5
+    xor  s11, s11, t6
 
-
-    mv a0, t5 # THis is the signature= number of misprediction # at time x
-    #li a0, 0xCAFECAFE    # return value
-
-
+    mv   a0, s11
 
     # ABI epilogue
-	lw s11, 8(sp)        # restore callee-saved registers
-	lw s10, 16(sp)
-	lw s9, 24(sp)
-	lw s8, 32(sp)
-	lw s7, 40(sp)
-	lw s6, 48(sp)
-	lw s5, 56(sp)
-	lw s4, 64(sp)
-	lw s3, 72(sp)
-	lw s2, 80(sp)
-	lw s1, 88(sp)
-	lw s0, 96(sp)
-	lw ra, 104(sp)       # restore return address
-	addi sp, sp, 112     # deallocate stack space
-	jr ra                # return to caller
-
-
-
-# READ/WRITE VARIABLES
+    lw s11,  8(sp)
+    lw s10, 16(sp)
+    lw s9,  24(sp)
+    lw s8,  32(sp)
+    lw s7,  40(sp)
+    lw s6,  48(sp)
+    lw s5,  56(sp)
+    lw s4,  64(sp)
+    lw s3,  72(sp)
+    lw s2,  80(sp)
+    lw s1,  88(sp)
+    lw s0,  96(sp)
+    lw ra, 104(sp)
+    addi sp, sp, 112
+    jr   ra
 
 .section .data
-
-# READ-ONLY VARIABLES
-
 .section .rodata

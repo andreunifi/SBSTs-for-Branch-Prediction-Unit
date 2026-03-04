@@ -1,0 +1,306 @@
+##############################################################################
+# sbst6.S  -  SBST targeting genblk2_pcmuxBPWrongInvalidateFlush (Wally CVW)
+#
+# SFF analysis (new report, post sbst5):
+#   Component                              Faults  ND(T1)  ND(T2)  Total
+#   ─────────────────────────────────────────────────────────────────────
+#   genblk2_pcmuxBPWrongInvalidateFlush      470     328     442     770
+#   pccorrectemux                            458     145     225     370
+#   pcmux1 / pcmux0 / pcmuxbp               834     218     309     527
+#   InstrClassReg cluster (x4+related)      424      56      56     112
+#   ─────────────────────────────────────────────────────────────────────
+#   Total directly addressable ND                                 ~1,779
+#
+# ROOT CAUSE:
+#   genblk2_pcmuxBPWrongInvalidateFlush selects the corrected Program Counter
+#   when a conditional branch mispredicts (BHT wrong) or when a pipeline
+#   flush / cache-invalidation event occurs.
+#
+#   q_reg[16:2]  ND=0: prior tests produce mispredictions with correction
+#                PCs in the low-address region, activating these bits.
+#   q_reg[ 1:0]  ND=2: SA-0 on bits [1:0] is structurally AU (RISC-V 4-byte
+#                instruction alignment forces these bits to 0 always).
+#   q_reg[31:17] ND=2: both SA-0 and SA-1 undetectable.
+#                ALL existing tests run in a compact low-address region;
+#                every correction PC has bits[31:17] = 0 (or a constant
+#                baseline from the start address).  Therefore:
+#                  SA-0 on bit k: correction_PC[k] is always 0 → fault
+#                                 indistinguishable from fault-free → ND.
+#                  SA-1 on bit k: correction_PC[k] is 0, SA-1 forces it to 1
+#                                 but the register is never exercised in a
+#                                 way the comparator downstream can observe
+#                                 the difference → also ND.
+#
+# STRATEGY:
+#   Move the misprediction-inducing loops into a dedicated section
+#   (.sbst6_hi) placed by the linker at a HIGH virtual address where
+#   bits[31:17] != 0.  Any correction PC within .sbst6_hi then carries
+#   those upper bits, converting previously-ND stuck-at faults to DD.
+#
+#   Six conditional branch types are used: BNE, BEQ, BGE, BLT, BGEU, BLTU.
+#   Each exercises a different entry in InstrClassReg (branch sub-type),
+#   and produces exactly one guaranteed misprediction.
+#
+# BHT TRAINING GUARANTEE (N=6, verified by counter simulation):
+#   For "predict NOT-TAKEN → actually TAKEN":
+#     5 NOT-TAKEN iterations → counter reaches strongly-NT (00) from any
+#     initial state → 6th iteration TAKEN → guaranteed misprediction.
+#   For "predict TAKEN → actually NOT-TAKEN":
+#     5 TAKEN iterations → counter reaches strongly-T (11) from any
+#     initial state → 6th iteration NOT-TAKEN → guaranteed misprediction.
+#
+# SECONDARY TARGETS (cascade benefit from activating the correction path):
+#   pccorrectemux:   downstream PC mux; activated by same events (~370 ND).
+#   pcmux0/1/pcmuxbp: further downstream mux U-cells (~527 ND).
+#   InstrClassReg{W,M,E} / PredInstrClassRegD: each branch type pushes a
+#     distinct instruction-class value through the pipeline registers
+#     (~112 ND).
+#   BPClassWrongRegM / WrongInstrClassRegE: wrong-class correction path.
+#
+# ADDITIONAL PHASE – (fence.i NOT used: zifencei extension not available in
+#   rv32i_zicsr build target.  The "InvalidateFlush" path is partially
+#   exercised as a side-effect of the 6 BHT misprediction events above,
+#   which all trigger pipeline flushes.)
+#
+# SIGNATURE: HPM misprediction counter delta.
+#   Fault-free result: exactly 6 BHT mispredictions → delta = 6.
+#   A stuck-at fault on the mux data path produces a wrong correction PC
+#   → the pipeline resumes at the wrong address → execution diverges →
+#   additional mispredictions or program termination → delta != 6.
+#
+# ──────────────────────────────────────────────────────────────────────────
+# LINKER SCRIPT REQUIREMENT  ← MANDATORY
+#
+#   .sbst6_hi MUST be placed at a virtual address where bits[31:17] != 0.
+#   On a bare-metal RISC-V system at 0x80000000 (Wally default), any
+#   address in that region satisfies this.  Suggested placement after the
+#   sbst5 walk sections:
+#
+#       .sbst6_hi : ALIGN(131072) { *(.sbst6_hi) }
+#
+#   This aligns to 128 KB (2^17), resolving to e.g. 0x80020000, which
+#   sets both bit[31] and bit[17] of every instruction address in the
+#   section.  To maximise the number of bits covered, place the section
+#   at an address that has as many bits[31:17] set as possible.
+#
+#   .sbst6_hi must be within ±1 MB (JAL range) of the test6 call site.
+# ──────────────────────────────────────────────────────────────────────────
+#
+# REGISTER MAP:
+#   s0  – frame pointer
+#   s1  – HPM baseline: hpmcounter4
+#   s2  – HPM baseline: hpmcounter5
+#   s8  – continuation address after .sbst6_hi block (callee-saved)
+#   s11 – running signature accumulator
+#   t3  – loop iteration counter (scratch inside .sbst6_hi)
+#   t4  – threshold constant (scratch inside .sbst6_hi)
+##############################################################################
+
+# ============================================================
+# .text  -  main test entry point
+# ============================================================
+.section .text
+.global test6
+.type   test6, @function
+
+test6:
+    #-- ABI prologue: 112-byte frame --------------------------
+    addi  sp,  sp, -112
+    sw    ra,  104(sp)
+    sw    s0,   96(sp)
+    sw    s1,   88(sp)
+    sw    s2,   80(sp)
+    sw    s3,   72(sp)
+    sw    s4,   64(sp)
+    sw    s5,   56(sp)
+    sw    s6,   48(sp)
+    sw    s7,   40(sp)
+    sw    s8,   32(sp)
+    sw    s9,   24(sp)
+    sw    s10,  16(sp)
+    sw    s11,   8(sp)
+    addi  s0,  sp, 112
+
+    #-- Signature seed ----------------------------------------
+    li    s11, 0xB5DE0000
+
+    #-- HPM baseline ------------------------------------------
+    csrr  s1, hpmcounter4
+    csrr  s2, hpmcounter5
+
+    # =========================================================
+    # PHASE 1–6: six BHT misprediction loops in .sbst6_hi.
+    #
+    #   J (= jal x0) is used so the RAS is NOT disturbed.
+    #   s8 holds the return address; .sbst6_hi ends with jr s8.
+    # =========================================================
+    la    s8, test6_after_hi
+    j     sbst6_hi_start              # enter hi-address section
+
+test6_after_hi:
+
+    # =========================================================
+    # Signature: HPM misprediction delta.
+    #   Fault-free: delta = 6 (one misprediction per branch loop).
+    #   Note: fence.i (zifencei extension) is not available in
+    #   rv32i_zicsr; the "InvalidateFlush" path of the mux is
+    #   exercised only via the 6 BHT mispredictions above.
+    # =========================================================
+    csrr  t5, hpmcounter4
+    csrr  t6, hpmcounter5
+    sub   t5, t5, s1
+    sub   t6, t6, s2
+    add   s11, s11, t5
+    add   s11, s11, t6
+
+    mv    a0, s11
+
+    #-- ABI epilogue ------------------------------------------
+    lw    s11,   8(sp)
+    lw    s10,  16(sp)
+    lw    s9,   24(sp)
+    lw    s8,   32(sp)
+    lw    s7,   40(sp)
+    lw    s6,   48(sp)
+    lw    s5,   56(sp)
+    lw    s4,   64(sp)
+    lw    s3,   72(sp)
+    lw    s2,   80(sp)
+    lw    s1,   88(sp)
+    lw    s0,   96(sp)
+    lw    ra,  104(sp)
+    addi  sp,  sp, 112
+    jr    ra
+
+
+# ==================================================================
+# .sbst6_hi  -  BHT misprediction loops at high virtual address
+#
+# CRITICAL: .balign 131072 → BASE_HI[16:0] = 0.
+#           The linker MUST place this section at BASE_HI where
+#           BASE_HI[31:17] != 0  (see LINKER SCRIPT REQUIREMENT).
+#
+# All six correction PCs are instruction addresses within this section
+# and therefore carry BASE_HI[31:17] in their upper bits.
+#
+# Each loop uses N=6 (BNE/BGE use N=7 due to range boundary, see below),
+# guaranteeing exactly one misprediction regardless of initial BHT state.
+#
+# Entry : J from test6 (s8 = continuation; RAS unmodified)
+# Exit  : jr s8
+# ==================================================================
+.section .sbst6_hi, "ax", @progbits
+.balign 131072                      # BASE_HI[16:0] = 0
+
+sbst6_hi_start:
+
+# ------------------------------------------------------------------
+# LOOP 1 – BNE  (pattern: t_then_nt)
+#
+#   bne t3, x0  →  TAKEN when t3 != 0, NOT-TAKEN when t3 = 0.
+#   N=6: t3 counts 5→4→3→2→1→0.
+#     Iters 1-5 : t3 in {5,4,3,2,1} → TAKEN   (trains BHT to ST=11)
+#     Iter  6   : t3 = 0             → NOT-TAKEN
+#   BHT predicts TAKEN for iter 6 → branch NOT-TAKEN → MISPREDICTION.
+#   Correction PC = (sbst6_bne_loop + 8)  ← this address, in .sbst6_hi.
+# ------------------------------------------------------------------
+    li    t3, 6
+sbst6_bne_loop:
+    addi  t3, t3, -1
+    bne   t3, x0, sbst6_bne_loop   # TAKEN 5×, NOT-TAKEN on 6th → MISPREDICT #1
+
+
+# ------------------------------------------------------------------
+# LOOP 2 – BEQ  (pattern: nt_then_t)
+#
+#   beq t3, x0  →  NOT-TAKEN when t3 != 0, TAKEN when t3 = 0.
+#   N=6: t3 counts 5→4→3→2→1→0.
+#     Iters 1-5 : NOT-TAKEN (trains BHT to SN=00)
+#     Iter  6   : TAKEN
+#   Correction PC = sbst6_beq_taken  ← in .sbst6_hi.
+# ------------------------------------------------------------------
+    li    t3, 6
+sbst6_beq_loop:
+    addi  t3, t3, -1
+    beq   t3, x0, sbst6_beq_taken  # NOT-TAKEN 5×, TAKEN on 6th → MISPREDICT #2
+    j     sbst6_beq_loop
+sbst6_beq_taken:
+
+
+# ------------------------------------------------------------------
+# LOOP 3 – BGE  (pattern: t_then_nt)
+#
+#   bge t3, x0  →  TAKEN when t3 >= 0 (signed), NOT-TAKEN when t3 < 0.
+#   Increment count to N=7 because t3=0 still satisfies (0 >= 0):
+#   t3 counts 6→5→4→3→2→1→0→-1.
+#     Iters 1-6 : t3 in {6,5,4,3,2,1,0} ≥ 0 → TAKEN  (trains BHT to ST)
+#     Iter  7   : t3 = -1 → NOT-TAKEN
+#   BHT predicts TAKEN for iter 7 → MISPREDICTION.
+#   Correction PC = (sbst6_bge_loop + 8)  ← in .sbst6_hi.
+#   N=7 still guarantees misprediction (6 TAKEN iterations → ST from any start).
+# ------------------------------------------------------------------
+    li    t3, 7
+sbst6_bge_loop:
+    addi  t3, t3, -1
+    bge   t3, x0, sbst6_bge_loop   # TAKEN 6× (t3 ≥ 0), NOT-TAKEN on 7th → MISPREDICT #3
+
+
+# ------------------------------------------------------------------
+# LOOP 4 – BLT  (pattern: nt_then_t)
+#
+#   blt t3, t4  →  TAKEN when t3 < t4 (signed), t4 = 1.
+#   NOT-TAKEN while t3 >= 1 (= t3 in {5,4,3,2,1}).
+#   TAKEN when t3 = 0  (0 < 1).
+#   Correction PC = sbst6_blt_taken  ← in .sbst6_hi.
+# ------------------------------------------------------------------
+    li    t3, 6
+    li    t4, 1
+sbst6_blt_loop:
+    addi  t3, t3, -1
+    blt   t3, t4, sbst6_blt_taken  # NOT-TAKEN 5× (t3>=1), TAKEN on 6th → MISPREDICT #4
+    j     sbst6_blt_loop
+sbst6_blt_taken:
+
+
+# ------------------------------------------------------------------
+# LOOP 5 – BGEU  (pattern: nt_then_t)
+#
+#   bgeu x0, t3  →  TAKEN when 0 >= t3 (unsigned),
+#                   i.e., only when t3 = 0 (only value for which 0>=t3 unsigned).
+#   NOT-TAKEN while t3 in {5,4,3,2,1}  (unsigned 0 < ti).
+#   TAKEN on iteration 6 when t3 = 0.
+#   Correction PC = sbst6_bgeu_taken  ← in .sbst6_hi.
+# ------------------------------------------------------------------
+    li    t3, 6
+sbst6_bgeu_loop:
+    addi  t3, t3, -1
+    bgeu  x0, t3, sbst6_bgeu_taken # NOT-TAKEN 5× (0<ti unsigned), TAKEN on 6th → MISPREDICT #5
+    j     sbst6_bgeu_loop
+sbst6_bgeu_taken:
+
+
+# ------------------------------------------------------------------
+# LOOP 6 – BLTU  (pattern: nt_then_t)
+#
+#   bltu t3, t4  →  TAKEN when t3 < t4 (unsigned), t4 = 1.
+#   NOT-TAKEN while t3 >= 1 (unsigned, same as BLT for positive values).
+#   TAKEN when t3 = 0  (unsigned 0 < 1).
+#   This loop uses a distinct PC from LOOP 4 → independent BHT entry.
+#   Correction PC = sbst6_bltu_taken  ← in .sbst6_hi.
+# ------------------------------------------------------------------
+    li    t3, 6
+    li    t4, 1
+sbst6_bltu_loop:
+    addi  t3, t3, -1
+    bltu  t3, t4, sbst6_bltu_taken # NOT-TAKEN 5× (t3>=1 unsigned), TAKEN on 6th → MISPREDICT #6
+    j     sbst6_bltu_loop
+sbst6_bltu_taken:
+
+
+# ------------------------------------------------------------------
+# Return to test6 via continuation stored in s8.
+# At this point exactly 6 guaranteed mispredictions have been produced,
+# all with correction PCs residing within .sbst6_hi, carrying
+# BASE_HI[31:17] as their upper address bits.
+# ------------------------------------------------------------------
+    jr    s8

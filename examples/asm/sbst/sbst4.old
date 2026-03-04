@@ -1,0 +1,351 @@
+##############################################################################
+# sbst4.S  –  SBST targeting genblk3_RASTargetEReg (Wally CVW)
+#
+# ROOT CAUSE of 0% ND on q_reg_2_ … q_reg_14_:
+#   genblk3_RASTargetEReg is the pipeline register (E-stage) that holds
+#   the RAS-predicted return address used for misprediction detection.
+#   sbst1–3 place ALL call instructions within a few KB of code, so bits
+#   [14:2] of every (call_addr + 4) are constant → those bits of the
+#   register are NEVER activated and therefore never detected.
+#
+# STRATEGY: Walking-1 test on bits [14:2]
+#   A 32 KB-aligned section (.ras_walk_t4) guarantees that BASE[14:0] = 0.
+#   Thirteen "jal ra, ras_t4_leaf" instructions are placed at byte offsets
+#   within that section such that:
+#
+#     offset  0x0000  →  ret_addr = BASE + 0x0004  →  bit[ 2] = 1
+#     offset  0x0004  →  ret_addr = BASE + 0x0008  →  bit[ 3] = 1
+#     offset  0x000C  →  ret_addr = BASE + 0x0010  →  bit[ 4] = 1
+#     offset  0x001C  →  ret_addr = BASE + 0x0020  →  bit[ 5] = 1
+#     offset  0x003C  →  ret_addr = BASE + 0x0040  →  bit[ 6] = 1
+#     offset  0x007C  →  ret_addr = BASE + 0x0080  →  bit[ 7] = 1
+#     offset  0x00FC  →  ret_addr = BASE + 0x0100  →  bit[ 8] = 1
+#     offset  0x01FC  →  ret_addr = BASE + 0x0200  →  bit[ 9] = 1
+#     offset  0x03FC  →  ret_addr = BASE + 0x0400  →  bit[10] = 1
+#     offset  0x07FC  →  ret_addr = BASE + 0x0800  →  bit[11] = 1
+#     offset  0x0FFC  →  ret_addr = BASE + 0x1000  →  bit[12] = 1
+#     offset  0x1FFC  →  ret_addr = BASE + 0x2000  →  bit[13] = 1
+#     offset  0x3FFC  →  ret_addr = BASE + 0x4000  →  bit[14] = 1
+#
+#   For each call at offset X:
+#     - RA ← BASE + X + 4   (actual return address)
+#     - RAS ← push(BASE + X + 4)
+#     - ras_t4_leaf executes RET → RAS predicts BASE + X + 4
+#     - If a stuck-at fault is present on bit k of genblk3_RASTargetEReg,
+#       the predicted target differs from actual RA → misprediction →
+#       pipeline flush → HPM misprediction counter increments → DETECTABLE.
+#
+#   SA-0 of bit k  : detected by the walking-1 call for bit k
+#                    (register should hold 1, fault forces it to 0)
+#   SA-1 of bit k  : detected by every OTHER walking-1 call
+#                    (those calls produce ret_addr with bit k = 0,
+#                     fault forces it to 1 → mismatch)
+#
+# ADDITIONAL PHASES:
+#   Phase 1 – Deep recursive calls (fills all RAS stack entries, covers
+#              natural bit patterns from upper address bits 15–31).
+#   Phase 3 – RAS overflow (>16 levels → tests pointer wrap-around logic).
+#   Phase 4 – Alternating JAL/RET bursts for extra transition coverage.
+#
+# SIGNATURE: delta of HPM misprediction counters (hpmcounter4 / 5).
+#   In the fault-free case all RAS predictions are correct → delta = 0.
+#   A stuck-at fault on any bit of RASTargetEReg introduces mispredictions
+#   → non-zero delta → detectable.
+#
+# ABI: standard RISC-V calling convention, fully compliant.
+##############################################################################
+
+# ============================================================
+# .text  –  main test function + helper functions
+# ============================================================
+.section .text
+.global test4
+.type   test4, @function
+
+test4:
+    # ---- ABI prologue ----
+    addi sp, sp, -112
+    sw   ra,  104(sp)
+    sw   s0,   96(sp)
+    sw   s1,   88(sp)
+    sw   s2,   80(sp)
+    sw   s3,   72(sp)
+    sw   s4,   64(sp)
+    sw   s5,   56(sp)
+    sw   s6,   48(sp)
+    sw   s7,   40(sp)
+    sw   s8,   32(sp)
+    sw   s9,   24(sp)
+    sw   s10,  16(sp)
+    sw   s11,   8(sp)
+    addi s0, sp, 112
+
+    # ---- Initialize running signature ----
+    li  s11, 0xC0DE0000
+
+    # ---- Snapshot HPM baseline (misprediction counters) ----
+    csrr s1, hpmcounter4      # branch misprediction counter
+    csrr s2, hpmcounter5      # secondary HPM counter
+
+    # ===========================================================
+    # PHASE 1: Deep recursive RAS fill
+    #   Push 16 return addresses onto the RAS (= typical Wally
+    #   RAS depth).  The call sites in .text naturally vary bits
+    #   15–31 of the return address, complementing the walk test.
+    # ===========================================================
+    li  a0, 0
+    li  a1, 16
+    call ras_t4_deep
+
+    # ===========================================================
+    # PHASE 2: Walking-1 test on bits [14:2] of RASTargetEReg
+    #
+    #   We enter the walk section via J (not CALL) so that the
+    #   very first instruction at BASE+0 is the bit-2 JAL.
+    #   s10 (callee-saved) holds the continuation address so that
+    #   ras_t4_walk can return via "jr s10" without corrupting RA.
+    # ===========================================================
+    la  t0, test4_walk_done
+    mv  s10, t0               # s10 = continuation (callee-saved)
+    j   ras_t4_walk           # enter at exact offset 0 of walk section
+
+test4_walk_done:
+    # Accumulate signature after walk
+    add s11, s11, ra          # ra = last return addr seen (bit-14 call)
+
+    # ===========================================================
+    # PHASE 3: RAS overflow test
+    #   Push 24 entries (> RAS depth of 16) to exercise the
+    #   circular-pointer wrap-around logic in the RAS.
+    # ===========================================================
+    li  a0, 0
+    li  a1, 24
+    call ras_t4_overflow
+
+    # ===========================================================
+    # PHASE 4: Rapid JAL/RET alternating burst
+    #   16 consecutive call/ret pairs at the current PC location,
+    #   exercising the fast-path through the pipeline register
+    #   with naturally varying upper address bits.
+    # ===========================================================
+    li  t0, 0
+    li  t1, 16
+test4_alt_loop:
+    jal  ra, ras_t4_leaf
+    addi s11, s11, 1
+    addi t0, t0, 1
+    blt  t0, t1, test4_alt_loop
+
+    # ===========================================================
+    # PHASE 5: JALR indirect with varying targets
+    #   Forces the RAS prediction path for indirect returns and
+    #   stresses the genblk3_BPPredWrongRegM path.
+    # ===========================================================
+    li   t0, 0
+    li   t1, 8
+    li   t2, 4
+test4_jalr_loop:
+    la   t3, test4_jalr_tgtA
+    blt  t0, t2, test4_do_jalr
+    la   t3, test4_jalr_tgtB
+test4_do_jalr:
+    jalr x0, t3, 0
+test4_jalr_tgtA:
+    addi s11, s11, 1
+    addi t0,  t0,  1
+    blt  t0,  t1,  test4_jalr_loop
+    j    test4_jalr_done
+test4_jalr_tgtB:
+    addi s11, s11, 2
+test4_jalr_done:
+
+    # ---- Compute signature = HPM delta ----
+    csrr t5, hpmcounter4
+    csrr t6, hpmcounter5
+    sub  t5, t5, s1
+    sub  t6, t6, s2
+    add  s11, s11, t5
+    add  s11, s11, t6
+
+    mv   a0, s11
+
+    # ---- ABI epilogue ----
+    lw   s11,   8(sp)
+    lw   s10,  16(sp)
+    lw   s9,   24(sp)
+    lw   s8,   32(sp)
+    lw   s7,   40(sp)
+    lw   s6,   48(sp)
+    lw   s5,   56(sp)
+    lw   s4,   64(sp)
+    lw   s3,   72(sp)
+    lw   s2,   80(sp)
+    lw   s1,   88(sp)
+    lw   s0,   96(sp)
+    lw   ra,  104(sp)
+    addi sp,  sp, 112
+    jr   ra
+
+# ---------------------------------------------------------------
+# Leaf function used by phase-4 alternating burst
+# (in .text so it is always near the burst call sites)
+# ---------------------------------------------------------------
+ras_t4_leaf:
+    ret
+
+# ---------------------------------------------------------------
+# Deep recursive fill  (a0 = counter, a1 = max depth)
+# ---------------------------------------------------------------
+ras_t4_deep:
+    addi sp, sp, -4
+    sw   ra, 0(sp)
+    addi a0, a0, 1
+    bge  a0, a1, ras_t4_deep_base
+    call ras_t4_deep
+ras_t4_deep_base:
+    lw   ra, 0(sp)
+    addi sp, sp, 4
+    ret
+
+# ---------------------------------------------------------------
+# RAS overflow  (a0 = counter, a1 = max depth > RAS size)
+# ---------------------------------------------------------------
+ras_t4_overflow:
+    addi sp, sp, -4
+    sw   ra, 0(sp)
+    addi a0, a0, 1
+    bge  a0, a1, ras_t4_ov_base
+    call ras_t4_overflow
+ras_t4_ov_base:
+    lw   ra, 0(sp)
+    addi sp, sp, 4
+    ret
+
+
+# ============================================================
+# .ras_walk_t4  –  Walking-1 test body
+#
+# CRITICAL:  .balign 32768 makes BASE[14:0] = 0 so that
+#            BASE + (2^k) has a pure walking-1 pattern on bits
+#            [14:2] of the return address.
+#
+# Entry:  J from test4  (ra is NOT modified by the entry jump)
+# Exit:   jr s10  (s10 set by test4 before the J)
+#
+# Each "jal ra, ras_t4_leaf_w" at offset X:
+#   - Writes BASE+X+4 into RA and pushes it to the RAS.
+#   - ras_t4_leaf_w does "ret" which pops the RAS prediction.
+#   - In the fault-free case prediction = RA → no misprediction.
+#   - A stuck-at fault on bit k of genblk3_RASTargetEReg causes
+#     prediction ≠ RA → misprediction → detectable.
+#
+# Dead NOP sleds between call islands are skipped by J instructions;
+# they are encoded as the canonical RISC-V NOP (addi x0, x0, 0 = 0x13).
+# ============================================================
+.section .ras_walk_t4, "ax", @progbits
+.balign 32768            # ← ESSENTIAL: 32 KB alignment
+
+ras_t4_walk:             # BASE + 0x0000  (32 KB boundary)
+
+# ── BIT 2 ────────────────────────────────────────────────────
+# JAL at offset 0x0000 → ret_addr = BASE+0x0004
+# bits[14:2] of ret_addr = 0b0000000000001  (only bit 2 = 1)
+    jal  ra, ras_t4_leaf_w          # offset 0x0000
+
+# ── BIT 3 ────────────────────────────────────────────────────
+# JAL at offset 0x0004 → ret_addr = BASE+0x0008
+# bits[14:2] of ret_addr = 0b0000000000010  (only bit 3 = 1)
+    jal  ra, ras_t4_leaf_w          # offset 0x0004
+
+# ── BIT 4 ────────────────────────────────────────────────────
+# JAL at offset 0x000C → ret_addr = BASE+0x0010
+# Need one NOP at 0x0008 before the call at 0x000C
+    nop                             # offset 0x0008
+    jal  ra, ras_t4_leaf_w          # offset 0x000C
+
+# ── BIT 5 ────────────────────────────────────────────────────
+# JAL must be at offset 0x001C → ret_addr = BASE+0x0020
+# Jump over the 2-NOP sled (0x0014, 0x0018)
+    j    ras_t4_bit5                # offset 0x0010
+    nop                             # offset 0x0014  (skipped)
+    nop                             # offset 0x0018  (skipped)
+ras_t4_bit5:                        # offset 0x001C
+    jal  ra, ras_t4_leaf_w          # offset 0x001C
+
+# ── BIT 6 ────────────────────────────────────────────────────
+# JAL at offset 0x003C → ret_addr = BASE+0x0040
+    j    ras_t4_bit6                # offset 0x0020
+    .fill 6, 4, 0x00000013          # 6 NOPs: 0x0024..0x0038  (skipped)
+ras_t4_bit6:                        # offset 0x003C
+    jal  ra, ras_t4_leaf_w          # offset 0x003C
+
+# ── BIT 7 ────────────────────────────────────────────────────
+# JAL at offset 0x007C → ret_addr = BASE+0x0080
+    j    ras_t4_bit7                # offset 0x0040
+    .fill 14, 4, 0x00000013         # 14 NOPs: 0x0044..0x0078  (skipped)
+ras_t4_bit7:                        # offset 0x007C
+    jal  ra, ras_t4_leaf_w          # offset 0x007C
+
+# ── BIT 8 ────────────────────────────────────────────────────
+# JAL at offset 0x00FC → ret_addr = BASE+0x0100
+    j    ras_t4_bit8                # offset 0x0080
+    .fill 30, 4, 0x00000013         # 30 NOPs: 0x0084..0x00F8  (skipped)
+ras_t4_bit8:                        # offset 0x00FC
+    jal  ra, ras_t4_leaf_w          # offset 0x00FC
+
+# ── BIT 9 ────────────────────────────────────────────────────
+# JAL at offset 0x01FC → ret_addr = BASE+0x0200
+    j    ras_t4_bit9                # offset 0x0100
+    .fill 62, 4, 0x00000013         # 62 NOPs: 0x0104..0x01F8  (skipped)
+ras_t4_bit9:                        # offset 0x01FC
+    jal  ra, ras_t4_leaf_w          # offset 0x01FC
+
+# ── BIT 10 ───────────────────────────────────────────────────
+# JAL at offset 0x03FC → ret_addr = BASE+0x0400
+    j    ras_t4_bit10               # offset 0x0200
+    .fill 126, 4, 0x00000013        # 126 NOPs: 0x0204..0x03F8  (skipped)
+ras_t4_bit10:                       # offset 0x03FC
+    jal  ra, ras_t4_leaf_w          # offset 0x03FC
+
+# ── BIT 11 ───────────────────────────────────────────────────
+# JAL at offset 0x07FC → ret_addr = BASE+0x0800
+    j    ras_t4_bit11               # offset 0x0400
+    .fill 254, 4, 0x00000013        # 254 NOPs: 0x0404..0x07F8  (skipped)
+ras_t4_bit11:                       # offset 0x07FC
+    jal  ra, ras_t4_leaf_w          # offset 0x07FC
+
+# ── BIT 12 ───────────────────────────────────────────────────
+# JAL at offset 0x0FFC → ret_addr = BASE+0x1000
+    j    ras_t4_bit12               # offset 0x0800
+    .fill 510, 4, 0x00000013        # 510 NOPs: 0x0804..0x0FF8  (skipped)
+ras_t4_bit12:                       # offset 0x0FFC
+    jal  ra, ras_t4_leaf_w          # offset 0x0FFC
+
+# ── BIT 13 ───────────────────────────────────────────────────
+# JAL at offset 0x1FFC → ret_addr = BASE+0x2000
+    j    ras_t4_bit13               # offset 0x1000
+    .fill 1022, 4, 0x00000013       # 1022 NOPs: 0x1004..0x1FF8  (skipped)
+ras_t4_bit13:                       # offset 0x1FFC
+    jal  ra, ras_t4_leaf_w          # offset 0x1FFC
+
+# ── BIT 14 ───────────────────────────────────────────────────
+# JAL at offset 0x3FFC → ret_addr = BASE+0x4000
+    j    ras_t4_bit14               # offset 0x2000
+    .fill 2046, 4, 0x00000013       # 2046 NOPs: 0x2004..0x3FF8  (skipped)
+ras_t4_bit14:                       # offset 0x3FFC
+    jal  ra, ras_t4_leaf_w          # offset 0x3FFC
+                                    # ret_addr = BASE+0x4000, bit[14]=1
+
+# ── Return to test4 via continuation stored in s10 ───────────
+    jr   s10                        # offset 0x4000
+
+# ── Leaf return function ──────────────────────────────────────
+# Must be within ±1 MB of offset 0x0000 (distance ≈ 16 KB ✓).
+# A simple RET pops the RAS prediction and jumps to RA.
+# Fault-free: prediction == RA → correct prediction.
+# Fault on bit k: prediction ≠ RA → misprediction → HPM increments.
+ras_t4_leaf_w:                      # offset ~0x4004
+    ret
+
+.section .data
+.section .rodata
