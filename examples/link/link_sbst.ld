@@ -9,6 +9,22 @@ SECTIONS
   .tohost : { *(.tohost) }
   .vectors : { PROVIDE(__vector_start = .); KEEP(*(.vectors)); }
   .text : { *(.text) }
+  
+  . = ALIGN(64);
+  .w0_entry0 : { KEEP(*(.w0_entry0)) }  
+
+  . = ALIGN(64);
+  .w0d_entry0 : { KEEP(*(.w0d_entry0)) }
+  .w0d_entry2 : ALIGN(8) { KEEP(*(.w0d_entry2)) }
+  .w0d_entry4 : ALIGN(8) { KEEP(*(.w0d_entry4)) }
+  .w0d_entry6 : ALIGN(8) { KEEP(*(.w0d_entry6)) }
+  . += 4;
+  .w0d_entry1 : { KEEP(*(.w0d_entry1)) }
+  .w0d_entry3 : { KEEP(*(.w0d_entry3)) }
+  .w0d_entry5 : { KEEP(*(.w0d_entry5)) }
+  .w0d_entry7 : { KEEP(*(.w0d_entry7)) }
+
+
   . = 0x80006820;
   .jumptk0 : { KEEP(*(.jumptk0)) }
   . = 0x80006864;
@@ -138,7 +154,6 @@ SECTIONS
   . = 0x82000000;
   .hi_b25 : { KEEP(*(.hi_b25)) }
   /* UNCORE_RAM_RANGE=0x07FFFFFF -> max addr 0x87FFFFFF (128MB)          */
-  /* Bits 27-31 unreachable; use 4 pages of bit-26 for RAS/BTB coverage.  */
   . = 0x84000000;  .hi_b26    : { KEEP(*(.hi_b26)) }    /* bit 26 page 1 */
   . = 0x85000000;  .hi_b27    : { KEEP(*(.hi_b27)) }    /* bit 26 page 2 */
   . = 0x86000000;  .hi_b28    : { KEEP(*(.hi_b28)) }    /* bit 26 page 3 */
@@ -156,4 +171,45 @@ SECTIONS
   .tdata : { _tdata_begin = .; *(.tdata) _tdata_end = .; }
   .tbss : { *(.tbss) _tbss_end = .; }
   _end = .;
+
+
+ . = 0x87FFFE00; 
+  .w1_entry0 : { KEEP(*(.w1_entry0)) }
+
+  .w1_entry1 : 
+  ALIGN(8)
+  { KEEP(*(.w1_entry1)) }
+
+  .w1_entry2 : 
+  ALIGN(8)
+  { KEEP(*(.w1_entry2)) }
+
+  .w1_entry3 : 
+  ALIGN(8)
+  { KEEP(*(.w1_entry3)) }
+
+  .w1_entry4 :
+  ALIGN(8)
+  { KEEP(*(.w1_entry4)) }
+
+  .w1_entry5 :
+  ALIGN(8)
+  { KEEP(*(.w1_entry5)) }
+
+  .w1_entry6 : 
+  ALIGN(8)
+  { KEEP(*(.w1_entry6)) }
+
+  .w1_entry7 :
+  ALIGN(8)
+  { KEEP(*(.w1_entry7)) }
+
+  .w1_entry8 :
+  ALIGN(8)
+  { KEEP(*(.w1_entry8)) }
+
+  .w1_entry9 :
+  ALIGN(8)
+  { KEEP(*(.w1_entry9)) }
+  
 }

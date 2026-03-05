@@ -20,6 +20,18 @@ test2:
 	sw s11, 8(sp)
 	addi s0, sp, 112     # set up s0 to point to start of stack frame
 
+    #MArch test: write all zeroes in the BTB entries 0-7 SECTION!
+    li a0, 1
+    call W0_SITE0_ascending
+    li a0, 1
+    call W1_SITE0_ascending
+    li a0, 1
+    call W0_SITE7_descending
+
+
+
+
+
     # -------------------------------------------------------------------------
     # 1. BTB Thrash Test ("Mega Sled") - KEEPING THIS (Proven effective)
     # -------------------------------------------------------------------------
@@ -90,6 +102,14 @@ btb_61: j btb_62
 btb_62: j btb_63
 btb_63: 
     nop
+
+
+
+
+
+
+
+
 
     # -------------------------------------------------------------------------
     # 2. Comprehensive Branch Condition Test (New)
@@ -392,6 +412,13 @@ test_end:
     csrr s4, hpmcounter8
 
 
+
+
+
+
+
+
+
     mv a0, t5 # THis is the signature= number of misprediction # at time x
     #li a0, 0xCAFECAFE    # return value
 
@@ -423,3 +450,57 @@ test_end:
 # READ-ONLY VARIABLES
 
 .section .rodata
+
+.section .w0_entry0, "ax", @progbits
+W0_SITE0_ascending: bnez a0, .+4
+        bnez a0, .+4
+        bnez a0, .+4
+        bnez a0, .+4
+        bnez a0, .+4
+        bnez a0, .+4
+        bnez a0, .+4
+        bnez a0, .+4
+        ret
+    .section .w1_entry0, "ax", @progbits
+W1_SITE0_ascending: bnez a0, .+4
+        bnez a0, .+4
+        bnez a0, .+4
+        bnez a0, .+4
+        bnez a0, .+4
+        bnez a0, .+4
+        bnez a0, .+4
+        bnez a0, .+4
+        ret
+
+    .section .w0d_entry7, "ax", @progbits
+W0_SITE7_descending: j W0_SITE6_descending
+    nop
+
+    .section .w0d_entry6, "ax", @progbits
+W0_SITE6_descending: j W0_SITE5_descending
+    nop
+
+    .section .w0d_entry5, "ax", @progbits
+W0_SITE5_descending: j W0_SITE4_descending
+    nop
+
+    .section .w0d_entry4, "ax", @progbits
+W0_SITE4_descending: j W0_SITE3_descending
+    nop
+
+    .section .w0d_entry3, "ax", @progbits
+W0_SITE3_descending: j W0_SITE2_descending
+    nop
+
+    .section .w0d_entry2, "ax", @progbits
+W0_SITE2_descending: j W0_SITE1_descending
+    nop
+
+    .section .w0d_entry1, "ax", @progbits
+W0_SITE1_descending: j W0_SITE0_descending
+    nop
+
+    .section .w0d_entry0, "ax", @progbits
+W0_SITE0_descending: j .+4
+    ret
+
