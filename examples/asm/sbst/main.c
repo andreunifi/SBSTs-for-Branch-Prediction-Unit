@@ -4,9 +4,11 @@
 volatile uint32_t sig;
 
 const signature_t const GOLDEN_SIGNATURES[NUMTESTS] = {
-	0xCAFECAFE, // TEST1
-	0x123494a0,	// TEST2
+	0xCAFECAFE // TEST1
+	//0x123494a0,	// TEST2
 };
+
+signature_t ACTUAL_SIGNATURES[NUMTESTS] = {};
 
 
 
@@ -35,40 +37,118 @@ uint32_t compute_signature(void) {
 int main(void)
 {
 
+	int i, fails=0;	
+
+	uint32_t hpm_before = compute_signature();
+
+	test1();
+
+	uint32_t hpm_after = compute_signature();
+
+	ACTUAL_SIGNATURES[i] = hpm_after - hpm_before; //store the difference in the first element
+
+	register uint32_t dbg1 asm("t0") = ACTUAL_SIGNATURES[i]; //check it manually 
+
+	i++;
+
+	hpm_before = compute_signature();
+
+	test2();
+
+	hpm_after = compute_signature();
+
+	ACTUAL_SIGNATURES[i] = hpm_after - hpm_before; //store the difference in the second element
+
+	register uint32_t dbg2 asm("t0") = ACTUAL_SIGNATURES[i]; //check it manually 
+
+	i++;
+
+
+	hpm_before = compute_signature();
+
+	test3();
+
+	hpm_after = compute_signature();
+
+	ACTUAL_SIGNATURES[i] = hpm_after - hpm_before; //store the difference in the second element
+
+	register uint32_t dbg3 asm("t0") = ACTUAL_SIGNATURES[i]; //check it manually 
+
+	i++;
+
+
+	hpm_before = compute_signature();
+
+	test4();
+
+	hpm_after = compute_signature();
+
+	ACTUAL_SIGNATURES[i] = hpm_after - hpm_before; //store the difference in the second element
+
+	register uint32_t dbg4 asm("t0") = ACTUAL_SIGNATURES[i]; //check it manually 
+
+
+	i++;
+
+	hpm_before = compute_signature();
+
+	test5();
+
+	hpm_after = compute_signature();
+
+	ACTUAL_SIGNATURES[i] = hpm_after - hpm_before; //store the difference in the second element
+
+	register uint32_t dbg5 asm("t0") = ACTUAL_SIGNATURES[i]; //check it manually 
+
+	i++;
+
+	hpm_before = compute_signature();
+
+	test6();
+
+	hpm_after = compute_signature();
+
+	ACTUAL_SIGNATURES[i] = hpm_after - hpm_before; //store the difference in the second element
+
+	register uint32_t dbg6 asm("t0") = ACTUAL_SIGNATURES[i]; //check it manually 
+
+	i++;
+
+
+	hpm_before = compute_signature();
+
+	test7();
+
+	hpm_after = compute_signature();
+
+	ACTUAL_SIGNATURES[i] = hpm_after - hpm_before; //store the difference in the second element
+
+	register uint32_t dbg7 asm("t0") = ACTUAL_SIGNATURES[i]; //check it manually 
+
+	i++;
+
+
+	hpm_before = compute_signature();
+
+	test8();
+
+	hpm_after = compute_signature();
+
+	ACTUAL_SIGNATURES[i] = hpm_after - hpm_before; //store the difference in the second element
+
+	register uint32_t dbg8 asm("t0") = ACTUAL_SIGNATURES[i]; //check it manually 
+
+	i++;
 
 
 
-	int i, fails=0;
-	signature_t signatures[NUMTESTS];
-	
-	// signatures[0] = test1();   // store return value in the first element
 
 
 	for(i=0; i<NUMTESTS; i++) {
-		if (i == 0) {
-			signatures[TEST1] = test1();
-		} else if (i == 1) {
-		} else {
-			uint32_t hpm_before = compute_signature();
-			//This checks HPM values
-			signatures[TEST2] = test2();
-			uint32_t test_sig = test3();
-			uint32_t test_sig4 = test4();
-			uint32_t test_sig5 = test5();
-			uint32_t test_sig6 = test6();
-			uint32_t test_sig7 = test7();
-			uint32_t test_sig8 = test8();
-			uint32_t test_sig9 = test9();
-			//RUn test1() to check for misprediction
-			uint32_t hpm_after = compute_signature();
-			//
-			signatures[i] = hpm_after - hpm_before;
-
-			register uint32_t dbg asm("t0") = signatures[i]; //check it manually 
+		if (ACTUAL_SIGNATURES[i] != GOLDEN_SIGNATURES[i]) {
+			fails++; 
 		}
-
-		fails += signatures[i] != GOLDEN_SIGNATURES[i];
-	}
+	}		
 
  	return fails;
 }

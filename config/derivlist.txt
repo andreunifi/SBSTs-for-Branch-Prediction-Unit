@@ -1553,6 +1553,7 @@ BTB_SIZE                32'd3
 ZICNTR_SUPPORTED        1
 ZIHPM_SUPPORTED         1
 COUNTERS                12'd32
+RAS_SIZE                32'd10
 
 
 deriv   syn_polito_rv32gc_bpu       rv32gc

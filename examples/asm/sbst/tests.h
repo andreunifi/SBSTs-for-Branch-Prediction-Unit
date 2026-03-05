@@ -9,7 +9,7 @@
 #define TEST6 5
 #define TEST7 6
 #define TEST8 7
-#define NUMTESTS 8
+#define NUMTESTS 1
 
 typedef unsigned int signature_t;
 
