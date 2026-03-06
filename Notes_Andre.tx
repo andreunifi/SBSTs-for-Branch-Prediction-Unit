@@ -4,8 +4,9 @@ Ideally BTB index = 4,3,2 of PCM (But delayed of one cc)
 Value= target address of the branch instruction+ 4 (quella dopo)
 
 ./wallySynth_polito.py --tech nangate45   -t 1500 -v syn_polito_rv32e_cached_assignment-c 50
-Todos: fix write_1 highest memory
+Todos: fix write_1 highest memory FIXED, maybe push it higher?
 Todos: HPM signing fix. FIXED
+Todos: try to understand the logic to force all 0s on the btb for mscratch
 Todos: Manually hardcode # of misprediction deltas after each sbst TODO
 Check csrs value doing so UNDERSTAND WHY CSRWRITES improve a lot fc
 Compact everything together - IN progress

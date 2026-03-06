@@ -503,4 +503,3 @@ W0_SITE1_descending: j W0_SITE0_descending
     .section .w0d_entry0, "ax", @progbits
 W0_SITE0_descending: j .+4
     ret
-

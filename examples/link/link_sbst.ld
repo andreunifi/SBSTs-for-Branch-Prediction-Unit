@@ -23,6 +23,12 @@ SECTIONS
   .w0d_entry3 : { KEEP(*(.w0d_entry3)) }
   .w0d_entry5 : { KEEP(*(.w0d_entry5)) }
   .w0d_entry7 : { KEEP(*(.w0d_entry7)) }
+  
+  /* ---- TEST3 ---- */
+  . = 0x80008000;
+  .ras_walk_t3 : { KEEP(*(.ras_walk_t3)) }
+  . = 0x80040000;
+  .ras_fill_t3 : { KEEP(*(.ras_fill_t3)) }
 
 
   . = 0x80006820;
