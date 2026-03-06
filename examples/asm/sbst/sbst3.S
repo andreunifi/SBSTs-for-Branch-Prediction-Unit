@@ -122,6 +122,15 @@ test3:
 
     li    s11, 0                    # accumulator
 
+    csrr t3,cycle    # Prevent optimization removal
+    csrr t4,time
+    csrr t5 ,0xB04
+    csrr t6 ,0xB05
+    csrr s2,0xB06
+    csrr s3 ,0xB07
+    csrr s4 ,0xB08
+    csrr s5 ,0xB09
+
     # ==========================================================
     # PHASE 1: 16-deep chain, return addresses in ~0x80008xxx
     # ==========================================================
@@ -132,12 +141,31 @@ test3:
     jal   ra, chain0_site_0
     # s11 += 380 (sum of primes 2+3+5+...+53) after full unwind
 
+    csrr t3,cycle    # Prevent optimization removal
+    csrr t4,time
+    csrr t5 ,0xB04
+    csrr t6 ,0xB05
+    csrr s2,0xB06
+    csrr s3 ,0xB07
+    csrr s4 ,0xB08
+    csrr s5 ,0xB09
+
     # ==========================================================
     # PHASE 2: 16-deep chain, return addresses in ~0x80040xxx
     # bits[17:14] differ from phase 1, exercising upper data bits
     # ==========================================================
     jal   ra, chain1_site_0
     # s11 += 380
+
+
+    csrr t3,cycle    # Prevent optimization removal
+    csrr t4,time
+    csrr t5 ,0xB04
+    csrr t6 ,0xB05
+    csrr s2,0xB06
+    csrr s3 ,0xB07
+    csrr s4 ,0xB08
+    csrr s5 ,0xB09
 
     # ==========================================================
     # PHASE 3: RAS overflow — 17 pushes into 16-entry RAS
@@ -163,6 +191,16 @@ ov_ret:
     jal   ra, ras_ptr_probe
 ptr_probe_land:
     addi  s11, s11, 0x55            # unique token; skipped if ret misdirects
+
+
+    csrr t3,cycle    # Prevent optimization removal
+    csrr t4,time
+    csrr t5 ,0xB04
+    csrr t6 ,0xB05
+    csrr s2,0xB06
+    csrr s3 ,0xB07
+    csrr s4 ,0xB08
+    csrr s5 ,0xB09
 
     # ==========================================================
     # PHASE 4: JALR rd=x0  — RAS must NOT be pushed
@@ -193,6 +231,16 @@ jalr_tgtD:
     jal   ra, ras_jalr_probe
 jalr_probe_land:
     addi  s11, s11, 0x77            # unique token
+
+
+    csrr t3,cycle    # Prevent optimization removal
+    csrr t4,time
+    csrr t5 ,0xB04
+    csrr t6 ,0xB05
+    csrr s2,0xB06
+    csrr s3 ,0xB07
+    csrr s4 ,0xB08
+    csrr s5 ,0xB09
 
     # ==========================================================
     # PHASE 5: Forced mismatch — exercises mismatch comparator
@@ -225,6 +273,15 @@ mm_dst2:    addi s11, s11, 0x103
 mm_poison3: addi s11, s11, 0x1FF
 mm_dst3:    addi s11, s11, 0x104
 
+    csrr t3,cycle    # Prevent optimization removal
+    csrr t4,time
+    csrr t5 ,0xB04
+    csrr t6 ,0xB05
+    csrr s2,0xB06
+    csrr s3 ,0xB07
+    csrr s4 ,0xB08
+    csrr s5 ,0xB09
+    
     mv    a0, s11                   # return accumulated signature
 
     lw    s11,   8(sp)

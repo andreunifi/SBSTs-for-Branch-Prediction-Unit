@@ -103,38 +103,26 @@ btb_62: j btb_63
 btb_63: 
     nop
 
+    #BTB stress test with branches of all types (Taken)   
 
-
-
-
-
-
-
-
-    # -------------------------------------------------------------------------
-    # 2. Comprehensive Branch Condition Test (New)
-    # -------------------------------------------------------------------------
-    # Exercises all comparator logic types in the IEU used for branch resolution.
-    
     li t0, 10
     li t1, 20
-    li t2, -5           # 0xFFFFFFFB (Large unsigned, small signed)
+    li t2, -5      
 
-    # BEQ (Taken)
-    csrr t3,cycle    # Prevent optimization removal
-    csrr t4,time
+    csrr t3,cycle   
     csrr t5 ,0xB04
     csrr t6 ,0xB05
     csrr s2 ,0xB06
     csrr s3 ,0xB07
     csrr s4 ,0xB08
     csrr s5 ,0xB09
-
+    
+    # BEQ (Taken)
     beq t0, t0, b_beq
     j test_end
 b_beq:
 
-    csrr t3,cycle    # Prevent optimization removal
+    csrr t3,cycle   
     csrr t4,time
     csrr t5 ,0xB04
     csrr t6 ,0xB05
@@ -142,6 +130,7 @@ b_beq:
     csrr s3 ,0xB07
     csrr s4 ,0xB08
     csrr s5 ,0xB09
+
     # BNE (Taken)
     bne t0, t1, b_bne
     j test_end
@@ -154,6 +143,7 @@ b_bne:
     csrr s3 ,0xB07
     csrr s4 ,0xB08
     csrr s5 ,0xB09
+
     # BLT (Signed Less - Taken) 10 < 20
     blt t0, t1, b_blt
     j test_end
@@ -166,6 +156,7 @@ b_blt:
     csrr s3 ,0xB07
     csrr s4 ,0xB08
     csrr s5 ,0xB09
+
     # BGE (Signed Greater/Eq - Taken) 10 >= 10
     bge t0, t0, b_bge
     j test_end
@@ -178,6 +169,7 @@ b_bge:
     csrr s3 ,0xB07
     csrr s4 ,0xB08
     csrr s5 ,0xB09
+
     # BLTU (Unsigned Less - Taken) 10 < -5 (unsigned huge)
     bltu t0, t2, b_bltu
     j test_end
@@ -189,17 +181,21 @@ b_bltu:
     csrr s2,0xB06
     csrr s3 ,0xB07
     csrr s4 ,0xB08
+
     # BGEU (Unsigned Greater - Taken) -5 (huge) >= 10
     bgeu t2, t0, b_bgeu
     j test_end
 b_bgeu:
-    csrr t3,cycle    # Prevent optimization removal
+    csrr t3,cycle    #
     csrr t4,time
     csrr t5 ,0xB04
     csrr t6 ,0xB05
     csrr s2,0xB06
     csrr s3 ,0xB07
     csrr s4 ,0xB08
+
+
+
     # -------------------------------------------------------------------------
     # 3. Dense Branching (New)
     # -------------------------------------------------------------------------
@@ -384,13 +380,6 @@ test_end:
 	nop
 	addi t0,t0,-1
 	bnez t0,test_end
-
-
-
-
-
-
-
 
         # Read the HPM CSRs into temporary registers
     csrr t5, 0xB04     # HPM0

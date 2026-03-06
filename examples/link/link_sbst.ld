@@ -23,12 +23,8 @@ SECTIONS
   .w0d_entry3 : { KEEP(*(.w0d_entry3)) }
   .w0d_entry5 : { KEEP(*(.w0d_entry5)) }
   .w0d_entry7 : { KEEP(*(.w0d_entry7)) }
-  
-  /* ---- TEST3 ---- */
-  . = 0x80008000;
-  .ras_walk_t3 : { KEEP(*(.ras_walk_t3)) }
-  . = 0x80040000;
-  .ras_fill_t3 : { KEEP(*(.ras_fill_t3)) }
+
+
 
 
   . = 0x80006820;
@@ -48,13 +44,18 @@ SECTIONS
   . = 0x800069FC;
   .jumptk7 : { KEEP(*(.jumptk7)) }
   . = 0x80008000;
-  .ras_walk_t4 : { KEEP(*(.ras_walk_t4)) }
+  .ras_walk_t3 : { KEEP(*(.ras_walk_t3)) }
   . = 0x80018000;
   .ras_walk_t5 : { KEEP(*(.ras_walk_t5)) }
   . = 0x80028000;
   .btb_walk_t5 : { KEEP(*(.btb_walk_t5)) }
-  . = 0x80040000;
-  .sbst6_hi : { KEEP(*(.sbst6_hi)) }
+
+    . = 0x80040000;
+  .ras_fill_t3 : { KEEP(*(.ras_fill_t3)) }
+
+  /*. = 0x80040000; */
+  /*.sbst6_hi : { KEEP(*(.sbst6_hi)) } */
+
   . = 0x80062000;
   .p1a0 : { KEEP(*(.p1a0)) }
   .p1b0 : { KEEP(*(.p1b0)) }

@@ -74,45 +74,7 @@ int main(void)
 
 	register uint32_t dbg3 asm("t0") = ACTUAL_SIGNATURES[i]; //check it manually 
 
-	i++;
-
-
-	// hpm_before = compute_signature();
-
-	// test4();
-
-	// hpm_after = compute_signature();
-
-	// ACTUAL_SIGNATURES[i] = hpm_after - hpm_before; //store the difference in the second element
-
-	// register uint32_t dbg4 asm("t0") = ACTUAL_SIGNATURES[i]; //check it manually 
-
-
-	// i++;
-
-	// hpm_before = compute_signature();
-
-	// test5();
-
-	// hpm_after = compute_signature();
-
-	// ACTUAL_SIGNATURES[i] = hpm_after - hpm_before; //store the difference in the second element
-
-	// register uint32_t dbg5 asm("t0") = ACTUAL_SIGNATURES[i]; //check it manually 
-
-	// i++;
-
-	hpm_before = compute_signature();
-
-	test6();
-
-	hpm_after = compute_signature();
-
-	ACTUAL_SIGNATURES[i] = hpm_after - hpm_before; //store the difference in the second element
-
-	register uint32_t dbg6 asm("t0") = ACTUAL_SIGNATURES[i]; //check it manually 
-
-	i++;
+	i=7;
 
 
 	hpm_before = compute_signature();

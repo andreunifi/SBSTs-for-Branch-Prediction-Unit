@@ -40,6 +40,15 @@ test1:
 
     li   s11, 0                 # global signature accumulator
 
+    csrr t3,cycle    # Prevent optimization removal
+    csrr t4,time
+    csrr t5 ,0xB04
+    csrr t6 ,0xB05
+    csrr s2,0xB06
+    csrr s3 ,0xB07
+    csrr s4 ,0xB08
+    csrr s5 ,0xB09
+
     #========================================
     # PHASE 1: Saturate all 8 BHT entries to 11
     #========================================
@@ -55,6 +64,8 @@ test1:
     call JUMPTK5; call JUMPTK5; call JUMPTK5
     call JUMPTK6; call JUMPTK6; call JUMPTK6
     call JUMPTK7; call JUMPTK7; call JUMPTK7
+
+    
 
     #========================================
     # PHASE 2: Move 11 -> 00 (Not-Taken, descending)
@@ -87,6 +98,15 @@ test1:
     call JUMPTK7; call JUMPTK7; call JUMPTK7; call JUMPTK7
 
     mv   a0, s11                # return accumulated signature
+
+        csrr t3,cycle    # Prevent optimization removal
+    csrr t4,time
+    csrr t5 ,0xB04
+    csrr t6 ,0xB05
+    csrr s2,0xB06
+    csrr s3 ,0xB07
+    csrr s4 ,0xB08
+    csrr s5 ,0xB09
 
     # ABI epilogue
     lw s11,  8(sp)

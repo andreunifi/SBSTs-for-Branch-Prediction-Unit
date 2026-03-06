@@ -71,8 +71,16 @@ test678:
     #    Phases 1-6: BNE/BEQ/BGE/BLT/BGEU/BLTU misprediction loops.
     #    Phase 7: AUIPC/LUI from high address (PC adder upper-bit coverage).
     #    Entry via J (not CALL) so the pushed RAS entry stays in .sbst6_hi.
-    csrr  s1, hpmcounter4
-    csrr  s2, hpmcounter5
+
+    csrr t3,cycle    # Prevent optimization removal
+    csrr t4,time
+    csrr t5 ,0xB04
+    csrr t6 ,0xB05
+    csrr s2,0xB06
+    csrr s3 ,0xB07
+    csrr s4 ,0xB08
+    csrr s5 ,0xB09
+
     la    s8, test678_after_hi     # trampoline return address
     j     sbst6_hi_start           # jump — does not push onto RAS
 test678_after_hi:
@@ -80,6 +88,15 @@ test678_after_hi:
     # ── RAS 2: sbst7 phase 1 — alternating push/pop (TDF-F / TDF-R) ────────
     #    For each of the 16 RAS slots: CALL A (bit N=1), ret, CALL B
     #    (bit N=0 same slot), ret → exercises 1→0 and 0→1 transitions.
+
+    csrr t3,cycle    # Prevent optimization removal
+    csrr t4,time
+    csrr t5 ,0xB04
+    csrr t6 ,0xB05
+    csrr s2,0xB06
+    csrr s3 ,0xB07
+    csrr s4 ,0xB08
+    csrr s5 ,0xB09
 
     call  p1_call_a0
 p1_ret_a0:
@@ -193,17 +210,46 @@ p1_ret_a15:
 p1_ret_b15:
     xor   s11, s11, ra
 
+    csrr t3,cycle    # Prevent optimization removal
+    csrr t4,time
+    csrr t5 ,0xB04
+    csrr t6 ,0xB05
+    csrr s2,0xB06
+    csrr s3 ,0xB07
+    csrr s4 ,0xB08
+    csrr s5 ,0xB09
+
     # ── RAS 3: sbst7 phase 2 — PtrMux full wraparound ──────────────────────
     #    Push 17 entries into the 16-entry RAS → ptr 15→0 (overflow).
     #    Pop 17 times → ptr 0→15 (underflow).
     call  p2_push17_start
     xor   s11, s11, ra
 
+
+    csrr t3,cycle    # Prevent optimization removal
+    csrr t4,time
+    csrr t5 ,0xB04
+    csrr t6 ,0xB05
+    csrr s2,0xB06
+    csrr s3 ,0xB07
+    csrr s4 ,0xB08
+    csrr s5 ,0xB09
+
     # ── RAS 4: sbst7 phase 4 — 16-deep interleaved write ───────────────────
     #    Each level in its own section so bits 4-15 of RA vary; leaf
     #    accumulates return addresses into a0 as the chain unwinds.
     call  p4_nest16
     xor   s11, s11, a0
+
+
+    csrr t3,cycle    # Prevent optimization removal
+    csrr t4,time
+    csrr t5 ,0xB04
+    csrr t6 ,0xB05
+    csrr s2,0xB06
+    csrr s3 ,0xB07
+    csrr s4 ,0xB08
+    csrr s5 ,0xB09
 
     # ── RAS 5: sbst8 — per-bit high-address TDF-F + SA-0 (bits 16-25) ──────
     #    For each bit N: fill all 16 RAS entries with that bit=1 (hi chain),
@@ -232,6 +278,15 @@ p1_ret_b15:
     call  hi_b16_n1             # step 3: re-verify SA-0
     xor   s11, s11, a0
 
+    csrr t3,cycle    # Prevent optimization removal
+    csrr t4,time
+    csrr t5 ,0xB04
+    csrr t6 ,0xB05
+    csrr s2,0xB06
+    csrr s3 ,0xB07
+    csrr s4 ,0xB08
+    csrr s5 ,0xB09
+
     # bit 17 (0x80020000)
     call  hi_b17_n1             # step 1: fill RAS with bit 17=1
     xor   s11, s11, a0
@@ -254,6 +309,15 @@ p1_ret_b15:
     xor   s11, s11, ra          # step 2: 1→0 transition detected
     call  hi_b17_n1             # step 3: re-verify SA-0
     xor   s11, s11, a0
+
+    csrr t3,cycle    # Prevent optimization removal
+    csrr t4,time
+    csrr t5 ,0xB04
+    csrr t6 ,0xB05
+    csrr s2,0xB06
+    csrr s3 ,0xB07
+    csrr s4 ,0xB08
+    csrr s5 ,0xB09
 
     # bit 18 (0x80040000)
     call  hi_b18_n1             # step 1: fill RAS with bit 18=1
@@ -278,6 +342,15 @@ p1_ret_b15:
     call  hi_b18_n1             # step 3: re-verify SA-0
     xor   s11, s11, a0
 
+    csrr t3,cycle    # Prevent optimization removal
+    csrr t4,time
+    csrr t5 ,0xB04
+    csrr t6 ,0xB05
+    csrr s2,0xB06
+    csrr s3 ,0xB07
+    csrr s4 ,0xB08
+    csrr s5 ,0xB09
+
     # bit 19 (0x80080000)
     call  hi_b19_n1             # step 1: fill RAS with bit 19=1
     xor   s11, s11, a0
@@ -300,6 +373,15 @@ p1_ret_b15:
     xor   s11, s11, ra          # step 2: 1→0 transition detected
     call  hi_b19_n1             # step 3: re-verify SA-0
     xor   s11, s11, a0
+
+    csrr t3,cycle    # Prevent optimization removal
+    csrr t4,time
+    csrr t5 ,0xB04
+    csrr t6 ,0xB05
+    csrr s2,0xB06
+    csrr s3 ,0xB07
+    csrr s4 ,0xB08
+    csrr s5 ,0xB09
 
     # bit 20 (0x80100000)
     call  hi_b20_n1             # step 1: fill RAS with bit 20=1
@@ -324,6 +406,15 @@ p1_ret_b15:
     call  hi_b20_n1             # step 3: re-verify SA-0
     xor   s11, s11, a0
 
+    csrr t3,cycle    # Prevent optimization removal
+    csrr t4,time
+    csrr t5 ,0xB04
+    csrr t6 ,0xB05
+    csrr s2,0xB06
+    csrr s3 ,0xB07
+    csrr s4 ,0xB08
+    csrr s5 ,0xB09
+
     # bit 21 (0x80200000)
     call  hi_b21_n1             # step 1: fill RAS with bit 21=1
     xor   s11, s11, a0
@@ -346,6 +437,16 @@ p1_ret_b15:
     xor   s11, s11, ra          # step 2: 1→0 transition detected
     call  hi_b21_n1             # step 3: re-verify SA-0
     xor   s11, s11, a0
+
+
+    csrr t3,cycle    # Prevent optimization removal
+    csrr t4,time
+    csrr t5 ,0xB04
+    csrr t6 ,0xB05
+    csrr s2,0xB06
+    csrr s3 ,0xB07
+    csrr s4 ,0xB08
+    csrr s5 ,0xB09
 
     # bit 22 (0x80400000)
     call  hi_b22_n1             # step 1: fill RAS with bit 22=1
