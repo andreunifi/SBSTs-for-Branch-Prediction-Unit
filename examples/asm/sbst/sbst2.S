@@ -441,14 +441,21 @@ test_end:
 .section .rodata
 
 .section .w0_entry0, "ax", @progbits
-W0_SITE0_ascending: bnez a0, .+4
+W0_SITE0_ascending:
         bnez a0, .+4
+        nop
         bnez a0, .+4
+        nop
         bnez a0, .+4
+        nop
         bnez a0, .+4
+        nop
         bnez a0, .+4
+        nop
         bnez a0, .+4
-        bnez a0, .+4
+        nop
+        nop
+
         ret
     .section .w1_entry0, "ax", @progbits
 W1_SITE0_ascending: bnez a0, .+4

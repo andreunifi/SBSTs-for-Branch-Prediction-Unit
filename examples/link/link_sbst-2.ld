@@ -23,8 +23,12 @@ SECTIONS
   .w0d_entry3 : { KEEP(*(.w0d_entry3)) }
   .w0d_entry5 : { KEEP(*(.w0d_entry5)) }
   .w0d_entry7 : { KEEP(*(.w0d_entry7)) }
-
-
+  
+  /* ---- TEST3 ---- */
+  . = 0x80008000;
+  .ras_walk_t3 : { KEEP(*(.ras_walk_t3)) }
+  . = 0x80040000;
+  .ras_fill_t3 : { KEEP(*(.ras_fill_t3)) }
 
 
   . = 0x80006820;
@@ -44,18 +48,13 @@ SECTIONS
   . = 0x800069FC;
   .jumptk7 : { KEEP(*(.jumptk7)) }
   . = 0x80008000;
-  .ras_walk_t3 : { KEEP(*(.ras_walk_t3)) }
+  .ras_walk_t3 : { KEEP(*(.ras_walk_t4)) }
   . = 0x80018000;
   .ras_walk_t5 : { KEEP(*(.ras_walk_t5)) }
   . = 0x80028000;
   .btb_walk_t5 : { KEEP(*(.btb_walk_t5)) }
-
-    . = 0x80040000;
-  .ras_fill_t3 : { KEEP(*(.ras_fill_t3)) }
-
-  /*. = 0x80040000; */
-  /*.sbst6_hi : { KEEP(*(.sbst6_hi)) } */
-
+  . = 0x80040000;
+  .sbst6_hi : { KEEP(*(.sbst6_hi)) }
   . = 0x80062000;
   .p1a0 : { KEEP(*(.p1a0)) }
   .p1b0 : { KEEP(*(.p1b0)) }
@@ -138,7 +137,7 @@ SECTIONS
   .jt13 : { KEEP(*(.jt13)) }
   .jt14 : { KEEP(*(.jt14)) }
   .jt15 : { KEEP(*(.jt15)) }
-  
+
   /* ---- TEST3 enhanced: Phase 6 — TDF-F/TDF-R alternating push/pop pairs ---- */
   .p6a0 : { KEEP(*(.p6a0)) }
   .p6b0 : { KEEP(*(.p6b0)) }
@@ -173,8 +172,6 @@ SECTIONS
   .p7_9  : { KEEP(*(.p7_9))  }
   .p7_10 : { KEEP(*(.p7_10)) }
   .p7_11 : { KEEP(*(.p7_11)) }
-
-
 
   . = 0x80011000;
   .hi_b16 : { KEEP(*(.hi_b16)) }
