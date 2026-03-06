@@ -20,7 +20,7 @@ test2:
 	sw s11, 8(sp)
 	addi s0, sp, 112     # set up s0 to point to start of stack frame
 
-    #MArch test: write all zeroes in the BTB entries 0-7 SECTION!
+    #March+ section
     li a0, 1
     call W0_SITE0_ascending
     li a0, 1
@@ -30,12 +30,8 @@ test2:
 
 
 
-
-
-    # -------------------------------------------------------------------------
-    # 1. BTB Thrash Test ("Mega Sled") - KEEPING THIS (Proven effective)
-    # -------------------------------------------------------------------------
-    # 64 Unique Jumps to fill the Branch Target Buffer
+    # 1. BTB Thrash Test 
+    #64 Unique Jumps to fill the Branch Target Buffer
     j btb_00
 btb_00: j btb_01
 btb_01: j btb_02
@@ -103,7 +99,7 @@ btb_62: j btb_63
 btb_63: 
     nop
 
-    #BTB stress test with branches of all types (Taken)   
+    #2: BTB stress test with branches of all types (Taken)   
 
     li t0, 10
     li t1, 20
@@ -144,7 +140,7 @@ b_bne:
     csrr s4 ,0xB08
     csrr s5 ,0xB09
 
-    # BLT (Signed Less - Taken) 10 < 20
+    # BLT 
     blt t0, t1, b_blt
     j test_end
 b_blt:
@@ -157,7 +153,7 @@ b_blt:
     csrr s4 ,0xB08
     csrr s5 ,0xB09
 
-    # BGE (Signed Greater/Eq - Taken) 10 >= 10
+    # BGE 
     bge t0, t0, b_bge
     j test_end
 b_bge:
@@ -170,7 +166,7 @@ b_bge:
     csrr s4 ,0xB08
     csrr s5 ,0xB09
 
-    # BLTU (Unsigned Less - Taken) 10 < -5 (unsigned huge)
+    # BLTU 
     bltu t0, t2, b_bltu
     j test_end
 b_bltu:
@@ -182,7 +178,7 @@ b_bltu:
     csrr s3 ,0xB07
     csrr s4 ,0xB08
 
-    # BGEU (Unsigned Greater - Taken) -5 (huge) >= 10
+    # BGEU 
     bgeu t2, t0, b_bgeu
     j test_end
 b_bgeu:
@@ -196,10 +192,8 @@ b_bgeu:
 
 
 
-    # -------------------------------------------------------------------------
-    # 3. Dense Branching (New)
-    # -------------------------------------------------------------------------
-    # Rapid-fire control flow changes to stress Fetch Queue/Buffering.
+    # 3. Dense Branching 
+    # Rapid-fire control instructions to stress BPU condition logic
     li t0, 0
     beq t0, zero, db_1
     nop
@@ -233,38 +227,9 @@ db_3:
     csrr s4 ,0xB08
     nop
 
-    # -------------------------------------------------------------------------
-    # 4. Cache Line Boundary Test (New)
-    # -------------------------------------------------------------------------
-    # Align to 64 bytes. Fill with NOPs until the very end of the line.
-    # Place a jump at the last word of the cache line to test "Next PC" logic crossing.
-    
-    .balign 64          # Align to start of a cache line
-    nop; nop; nop; nop  # 0-15 bytes
-    nop; nop; nop; nop  # 16-31 bytes
-    nop; nop; nop; nop  # 32-47 bytes
-    nop; nop; nop       # 48-59 bytes
-    
-    # This instruction is at offset 60 (bytes 60-63).
-    # It ends exactly at the cache line boundary (64).
-    # The Fetch Unit must calculate the target while handling the line boundary.
-    j boundary_target   
-    
-    nop                 # Should be skipped
-    nop
-boundary_target:
-    csrr t3,cycle    # Prevent optimization removal
-    csrr t4,time
-    csrr t5 ,0xB04
-    csrr t6 ,0xB05
-    csrr s2,0xB06
-    csrr s3 ,0xB07
-    csrr s4 ,0xB08
-    nop
-
-    # -------------------------------------------------------------------------
-    # 5. RAS Overflow Test (Keep Deep Recursion)
-    # -------------------------------------------------------------------------
+    # 4. Recursive deep calls
+    #Qui ho create una chain di chiamate ricorsive per testare se ci sono problemi nel tipo di istruzione 
+    #letta
     li a0, 0
     li a1, 32           # Depth 32
     jal ra, recursive_deep
@@ -298,9 +263,7 @@ recursive_base:
     addi sp, sp, 4
     ret
 
-    # -------------------------------------------------------------------------
-    # 6. JALR Misprediction (Keep Target Switch)
-    # -------------------------------------------------------------------------
+    # 5. JALR Misprediction, come nei loop
 jalr_test:
     csrr t3,cycle    # Prevent optimization removal
     csrr t4,time
@@ -367,8 +330,7 @@ target_B:
     # Epilogue
     # -------------------------------------------------------------------------
 
-
-	li t0,4   #Primo address = PCF 29
+	li t0,4  
 test_end:
     csrr t3,cycle    # Prevent optimization removal
     csrr t4,time
@@ -400,17 +362,7 @@ test_end:
     csrr s3, hpmcounter7
     csrr s4, hpmcounter8
 
-
-
-
-
-
-
-
-
-    mv a0, t5 # THis is the signature= number of misprediction # at time x
-    #li a0, 0xCAFECAFE    # return value
-
+    mv a0, t5 #signature= somma di tutte i valori degli HPM
 
 
     # ABI epilogue
@@ -443,20 +395,14 @@ test_end:
 .section .w0_entry0, "ax", @progbits
 W0_SITE0_ascending:
         bnez a0, .+4
-        nop
         bnez a0, .+4
-        nop
         bnez a0, .+4
-        nop
         bnez a0, .+4
-        nop
         bnez a0, .+4
-        nop
         bnez a0, .+4
-        nop
-        nop
-
+        bnez a0, .+4
         ret
+
     .section .w1_entry0, "ax", @progbits
 W1_SITE0_ascending: bnez a0, .+4
         bnez a0, .+4
