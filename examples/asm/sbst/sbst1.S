@@ -1,12 +1,7 @@
 ##############################################################################
-# sbst1.S  --  BHT 2-bit counter saturation + comprehensive IEU/LSU test
+# sbst1.S  --  BHT 2-bit counter saturation
 #
 # Phase 1-3  : existing BHT saturation test (8 entries, BPRED_SIZE=3)
-# Phase 4    : ALU walking-1  (ADD/SUB/AND/OR/XOR/SLT/SLTU + immediates)
-# Phase 5    : Shift sweep    (SLL/SRL/SRA all 32 amounts, two patterns)
-# Phase 6    : LUI/AUIPC walking on bits[31:12]
-# Phase 7    : Load/store walking-1 (SW/LW, SB/LB/LBU, SH/LH/LHU)
-# Phase 8    : Data-forwarding chain (EX->EX and load-use RAW hazards)
 #
 # SIGNATURE: a0 = accumulated XOR of all computed values.
 ##############################################################################
@@ -99,7 +94,7 @@ test1:
 
     mv   a0, s11                # return accumulated signature
 
-        csrr t3,cycle    # Prevent optimization removal
+    csrr t3,cycle    # Prevent optimization removal
     csrr t4,time
     csrr t5 ,0xB04
     csrr t6 ,0xB05

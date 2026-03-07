@@ -7,7 +7,7 @@ Value= target address of the branch instruction+ 4 (quella dopo)
 Todos: fix write_1 highest memory FIXED, maybe push it higher?
 Todos: HPM signing fix. FIXED
 Todos: try to understand the logic to force all 0s on the btb for mscratch This is fine: mscratch refer to documentation (pg 92)
-Come può essere scalato?
+Come può essere scalato? Missing Raspredictor
 
 
 Todos: Manually hardcode # of misprediction deltas after each sbst TODO

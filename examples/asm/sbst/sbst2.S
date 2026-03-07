@@ -20,7 +20,7 @@ test2:
 	sw s11, 8(sp)
 	addi s0, sp, 112     # set up s0 to point to start of stack frame
 
-    #March+ section
+    #Mats+ section
     li a0, 1
     call W0_SITE0_ascending
     li a0, 1
