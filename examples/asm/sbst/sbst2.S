@@ -1,3 +1,7 @@
+##############################################################################
+# sbst2.S  --  BTB Trash Test and MATS+ March Alg.
+##############################################################################
+
 .section .text
 .global test2
 .type test2, @function
@@ -99,7 +103,7 @@ btb_62: j btb_63
 btb_63: 
     nop
 
-    #2: BTB stress test with branches of all types (Taken)   
+    # 2: BTB stress test with branches of all types (Taken)   
 
     li t0, 10
     li t1, 20
@@ -228,7 +232,7 @@ db_3:
     nop
 
     # 4. Recursive deep calls
-    #Qui ho create una chain di chiamate ricorsive per testare se ci sono problemi nel tipo di istruzione 
+    # Qui ho create una chain di chiamate ricorsive per testare se ci sono problemi nel tipo di istruzione 
     #letta
     li a0, 0
     li a1, 32           # Depth 32
@@ -326,9 +330,7 @@ target_B:
     csrr s4 ,0xB08
     nop
 
-    # -------------------------------------------------------------------------
     # Epilogue
-    # -------------------------------------------------------------------------
 
 	li t0,4  
 test_end:
@@ -343,7 +345,7 @@ test_end:
 	addi t0,t0,-1
 	bnez t0,test_end
 
-        # Read the HPM CSRs into temporary registers
+    # Read the HPM CSRs into temporary registers
     csrr t5, 0xB04     # HPM0
     csrr t6, 0xB05     # HPM1
     csrr s2, 0xB06     # HPM2
@@ -356,13 +358,7 @@ test_end:
     add t5, t5, s3     # t5 = t5 + s3
     add t5, t5, s4     # t5 = t5 + s4
 
-    csrr t5, hpmcounter4
-    csrr t6, hpmcounter5
-    csrr s2, hpmcounter6
-    csrr s3, hpmcounter7
-    csrr s4, hpmcounter8
-
-    mv a0, t5 #signature= somma di tutte i valori degli HPM
+    mv a0, t5   # signature = somma di tutte i valori degli HPM
 
 
     # ABI epilogue

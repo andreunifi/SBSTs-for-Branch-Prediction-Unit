@@ -1,7 +1,7 @@
 ##############################################################################
 # sbst1.S  --  BHT 2-bit counter saturation
 #
-# Phase 1-3  : existing BHT saturation test (8 entries, BPRED_SIZE=3)
+# Phase 1-3: BHT saturation test (8 entries, BPRED_SIZE=3)
 #
 # SIGNATURE: a0 = accumulated XOR of all computed values.
 ##############################################################################
@@ -51,14 +51,30 @@ test1:
     lw  x10, 0(x11)
     lw  x12, 0(x11)
 
-    call JUMPTK0; call JUMPTK0; call JUMPTK0
-    call JUMPTK1; call JUMPTK1; call JUMPTK1
-    call JUMPTK2; call JUMPTK2; call JUMPTK2
-    call JUMPTK3; call JUMPTK3; call JUMPTK3
-    call JUMPTK4; call JUMPTK4; call JUMPTK4
-    call JUMPTK5; call JUMPTK5; call JUMPTK5
-    call JUMPTK6; call JUMPTK6; call JUMPTK6
-    call JUMPTK7; call JUMPTK7; call JUMPTK7
+    call JUMPTK0
+    call JUMPTK0
+    call JUMPTK0
+    call JUMPTK1
+    call JUMPTK1
+    call JUMPTK1
+    call JUMPTK2
+    call JUMPTK2
+    call JUMPTK2
+    call JUMPTK3
+    call JUMPTK3
+    call JUMPTK3
+    call JUMPTK4
+    call JUMPTK4
+    call JUMPTK4
+    call JUMPTK5
+    call JUMPTK5
+    call JUMPTK5
+    call JUMPTK6
+    call JUMPTK6
+    call JUMPTK6
+    call JUMPTK7
+    call JUMPTK7
+    call JUMPTK7
 
     
 
@@ -68,14 +84,38 @@ test1:
     la  x11, B
     lw  x12, 0(x11)
 
-    call JUMPTK7; call JUMPTK7; call JUMPTK7; call JUMPTK7
-    call JUMPTK6; call JUMPTK6; call JUMPTK6; call JUMPTK6
-    call JUMPTK5; call JUMPTK5; call JUMPTK5; call JUMPTK5
-    call JUMPTK4; call JUMPTK4; call JUMPTK4; call JUMPTK4
-    call JUMPTK3; call JUMPTK3; call JUMPTK3; call JUMPTK3
-    call JUMPTK2; call JUMPTK2; call JUMPTK2; call JUMPTK2
-    call JUMPTK1; call JUMPTK1; call JUMPTK1; call JUMPTK1
-    call JUMPTK0; call JUMPTK0; call JUMPTK0; call JUMPTK0
+    call JUMPTK7 
+    call JUMPTK7
+    call JUMPTK7
+    call JUMPTK7
+    call JUMPTK6
+    call JUMPTK6
+    call JUMPTK6
+    call JUMPTK6
+    call JUMPTK5
+    call JUMPTK5
+    call JUMPTK5
+    call JUMPTK5
+    call JUMPTK4
+    call JUMPTK4
+    call JUMPTK4
+    call JUMPTK4
+    call JUMPTK3
+    call JUMPTK3
+    call JUMPTK3
+    call JUMPTK3
+    call JUMPTK2
+    call JUMPTK2
+    call JUMPTK2
+    call JUMPTK2
+    call JUMPTK1
+    call JUMPTK1
+    call JUMPTK1
+    call JUMPTK1
+    call JUMPTK0
+    call JUMPTK0
+    call JUMPTK0
+    call JUMPTK0
 
     #========================================
     # PHASE 3: Move 00 -> 11 (Taken, ascending)
@@ -83,14 +123,38 @@ test1:
     la  x11, A
     lw  x12, 0(x11)
 
-    call JUMPTK0; call JUMPTK0; call JUMPTK0; call JUMPTK0
-    call JUMPTK1; call JUMPTK1; call JUMPTK1; call JUMPTK1
-    call JUMPTK2; call JUMPTK2; call JUMPTK2; call JUMPTK2
-    call JUMPTK3; call JUMPTK3; call JUMPTK3; call JUMPTK3
-    call JUMPTK4; call JUMPTK4; call JUMPTK4; call JUMPTK4
-    call JUMPTK5; call JUMPTK5; call JUMPTK5; call JUMPTK5
-    call JUMPTK6; call JUMPTK6; call JUMPTK6; call JUMPTK6
-    call JUMPTK7; call JUMPTK7; call JUMPTK7; call JUMPTK7
+    call JUMPTK0
+    call JUMPTK0
+    call JUMPTK0
+    call JUMPTK0
+    call JUMPTK1
+    call JUMPTK1
+    call JUMPTK1
+    call JUMPTK1
+    call JUMPTK2
+    call JUMPTK2
+    call JUMPTK2
+    call JUMPTK2
+    call JUMPTK3
+    call JUMPTK3
+    call JUMPTK3
+    call JUMPTK3
+    call JUMPTK4
+    call JUMPTK4
+    call JUMPTK4
+    call JUMPTK4
+    call JUMPTK5
+    call JUMPTK5
+    call JUMPTK5
+    call JUMPTK5
+    call JUMPTK6
+    call JUMPTK6
+    call JUMPTK6
+    call JUMPTK6
+    call JUMPTK7
+    call JUMPTK7
+    call JUMPTK7
+    call JUMPTK7
 
     mv   a0, s11                # return accumulated signature
 
