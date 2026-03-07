@@ -4,8 +4,10 @@
 volatile uint32_t sig;
 
 const signature_t const GOLDEN_SIGNATURES[NUMTESTS] = {
-	0xCAFECAFE // TEST1
-	//0x123494a0,	// TEST2
+	0x000001d8,
+	0x0000020b,
+	0x00000912,
+	0x000000d7
 };
 
 signature_t ACTUAL_SIGNATURES[NUMTESTS] = {};

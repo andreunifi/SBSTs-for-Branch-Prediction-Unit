@@ -30,7 +30,7 @@ cd zoix
 
 echo ""
 echo "Step 6: Run fault simulation"
-./zoix_cvw.sh syn_polito_rv32e_cached_assignment questa
+./zoix_cvw.sh syn_polito_rv32e_bpu questa
 
 echo ""
 echo "Workflow completed successfully!"
