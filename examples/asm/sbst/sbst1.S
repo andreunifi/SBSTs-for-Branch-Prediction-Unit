@@ -5,7 +5,7 @@
 #
 # Sig: a0 = accumulated XOR of all computed values.
 ##############################################################################
-
+#Questo test deve saturare la bht portandola in uno stato noto prima di iniziare il March.
 .section .text
 .global test1
 .type test1, @function

@@ -1,7 +1,7 @@
 ##############################################################################
-# sbst2.S  --  BTB Trash Test and MATS+ March Alg.
+# sbst2.S  --  BTB  MATS+ March Alg and Stress test
 ##############################################################################
-
+#March alg e stress test della logica di controllo
 .section .text
 .global test2
 .type test2, @function
