@@ -3,7 +3,7 @@
 #
 # Phase 1-3: BHT saturation test (8 entries, BPRED_SIZE=3)
 #
-# SIGNATURE: a0 = accumulated XOR of all computed values.
+# Sig: a0 = accumulated XOR of all computed values.
 ##############################################################################
 
 .section .text
@@ -44,9 +44,8 @@ test1:
     csrr s4 ,0xB08
     csrr s5 ,0xB09
 
-    #========================================
-    # PHASE 1: Saturate all 8 BHT entries to 11
-    #========================================
+
+    # Phase 1: Saturate all 8 BHT entries to 11
     la  x11, A
     lw  x10, 0(x11)
     lw  x12, 0(x11)
@@ -77,10 +76,7 @@ test1:
     call JUMPTK7
 
     
-
-    #========================================
-    # PHASE 2: Move 11 -> 00 (Not-Taken, descending)
-    #========================================
+    # Phase 2: Move 11 -> 00 (Not-Taken, descending)
     la  x11, B
     lw  x12, 0(x11)
 
@@ -117,9 +113,8 @@ test1:
     call JUMPTK0
     call JUMPTK0
 
-    #========================================
-    # PHASE 3: Move 00 -> 11 (Taken, ascending)
-    #========================================
+
+    # Phase 3: Move 00 -> 11 (Taken, ascending)
     la  x11, A
     lw  x12, 0(x11)
 
@@ -184,10 +179,9 @@ test1:
     addi sp, sp, 112
     jr   ra
 
-#--------------------------------------------------------------
-# BHT stub sections -- each placed in its own section so the
-# linker can map them to distinct BHT entries (BPRED_SIZE=3).
-#--------------------------------------------------------------
+
+# BHT stub sections
+# placed in its own section so the linker can map them to distinct BHT entries (BPRED_SIZE=3)
     .section .jumptk0, "ax", @progbits
     .align 2
 JUMPTK0:
