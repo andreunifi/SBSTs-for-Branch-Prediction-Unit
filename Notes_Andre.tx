@@ -3,15 +3,16 @@ wsim --elf ./examples/asm/sbst/sbst.elf --gate --define +define+GATE_LEVEL=1 --s
 Ideally BTB index = 4,3,2 of PCM (But delayed of one cc)
 Value= target address of the branch instruction+ 4 (quella dopo)
 
-./wallySynth_polito.py --tech nangate45   -t 1500 -v syn_polito_rv32e_cached_assignment-c 50
+./wallySynth_polito.py --tech nangate45   -t 1500 -v syn_polito_rv32e_bpu -c 50
 Todos: fix write_1 highest memory FIXED, maybe push it higher? FIXED
 Todos: HPM signing fix. FIXED
 Todos: try to understand the logic to force all 0s on the btb for mscratch This is fine: mscratch refer to documentation (pg 92)
-Come può essere scalato? All algorithms need to write how they can be scaled
+Come può essere scalato? All algorithms need to write how they can be scaled In progress
 
 
 Todos: Manually hardcode # of misprediction deltas after each sbst TODO
-Todos: add Test application time result
-Compact everything together - IN progress
+Todos: add Test application time result TODO
+Compact everything together - FIXED
+ADD WAVEFORMS!!!!!
 
--Aggiunger csrr reads ovunque per alzare la coverage
+-Aggiunger csrr reads ovunque per alzare la coverage FIXED
