@@ -1,3 +1,97 @@
+# 🚀 Software-Based Self-Test (SBST) Development for the CORE-V Wally BPU
+
+![Course](https://img.shields.io/badge/Course-Testing_%26_Fault_Tolerance-blue?style=flat-square)
+![Institution](https://img.shields.io/badge/Institution-Politecnico_di_Torino-1A4275?style=flat-square)
+![Date](https://img.shields.io/badge/Date-June_2026-brightgreen?style=flat-square)
+
+> **Course:** Testing and Fault Tolerance  
+> **Institution:** Politecnico di Torino  
+> **Date:** June 14, 2026
+
+---
+
+## Table of Contents
+* [About the Project](#about-the-project)
+* [Target Architecture](#target-architecture)
+* [Testing Methodology](#testing-methodology)
+* [📊 Fault Coverage Results](#-fault-coverage-results)
+* [💻 Getting Started](#-getting-started)
+* [Authors](#authors)
+
+---
+
+## About the Project
+This repository contains the development and evaluation of a Software-Based Self-Test (SBST) suite targeting the Branch Prediction Unit (BPU) of the CORE-V Wally (CVW) processor. 
+
+**Primary Objectives:**
+* Achieve high fault coverage (FC) for Stuck-At Faults (at least 90%)[cite: 1].
+* Achieve high fault coverage for Transition Delay Faults (at least 80%)[cite: 1].
+* Minimize the Test Application Time (TAT)[cite: 1]. 
+
+These tests are designed to detect physical manufacturing defects—such as gate outputs permanently stuck at logic 0 or 1, or signals failing to transition within the required clock period—directly on the processor itself, without requiring external test equipment[cite: 1].
+
+---
+
+## Target Architecture
+The CORE-V Wally is a configurable RISC-V processor that implements a 5-stage pipeline[cite: 1]. The target BPU is located within the Instruction Fetch Unit (IFU) and is responsible for minimizing control flow stalls by predicting the direction (Taken/Not Taken) and target address of branch and jump instructions[cite: 1]. 
+
+Our testing evaluates three primary subcomponents of the BPU:
+* **Branch History Table (BHT):** A direct-mapped table of 8 entries where each entry is a 2-bit saturating counter used to predict branch direction[cite: 1].
+* **Branch Target Buffer (BTB):** A direct-mapped cache of 8 entries that stores a target address and a 4-bit instruction class[cite: 1].
+* **Return Address Stack (RAS):** A hardware stack structure with up to 10 entries dedicated to predicting return addresses[cite: 1].
+
+---
+
+## Testing Methodology
+The SBST suite is implemented as standalone assembly routines called sequentially from a C `main()` function[cite: 1]. Prediction correctness is observed through Hardware Performance Monitor (HPM) counters[cite: 1].
+
+### 1. BHT March Test (`sbst1.S`)
+* Designed to stress the BHT by exercising all saturating counter states and transitions[cite: 1].
+* Implements a modified memory march algorithm (`11`, `11 -> 00`, `00 -> 11`)[cite: 1].
+* The linker script is modified to place each stub function at a precisely computed address, ensuring that the branch inside each stub maps to a distinct BHT entry without aliasing[cite: 1].
+
+### 2. BTB MATS+ and Stress Tests (`sbst2.S`)
+* Evaluates the 36-bit wide BTB entries via a modified MATS+ March Algorithm[cite: 1].
+* Uses valid executable memory addresses as logical patterns (Logic 0 at `0x80002280` and Logic 1 at `0x87FFFE04`) to maximize the Hamming distance[cite: 1].
+* Includes functional stress tests: BTB thrashing, condition coverage, dense branching, recursive calls, and indirect target switches[cite: 1].
+
+### 3. RAS Behavioral Probes (`sbst3.S`)
+* Evaluates the 10-entry RAS, targeting its pointer logic, push/pop control signals, and wraparound behavior[cite: 1].
+* Utilizes 10-deep nested call chains to fill and unwind the stack in different memory ranges[cite: 1].
+* Intentionally overflows the 10-entry RAS (using 11 nested levels) to test pointer wraparound and underflow logic[cite: 1].
+
+### 4. RAS MATS+ Test (`sbst4.S`)
+* Executes a formal MATS+ march test for the RASPredictor unit[cite: 1].
+* Utilizes `.ras_low` and `.ras_high` memory zones mapped in the linker script to force `0 -> 1` and `1 -> 0` transitions in the RAS SRAM cells[cite: 1].
+
+---
+
+## 📊 Fault Coverage Results
+Coverage was measured using the ZOIX fault simulator operating on the gate-level netlist[cite: 1]. Despite architectural constraints that limit the stimulation of certain hardcoded memory range bits, the test suite achieves a solid balance of coverage and execution efficiency[cite: 1].
+
+| Metric | Prime Faults | Total Faults |
+| :--- | :--- | :--- |
+| **Final Test Coverage** | 72.87%[cite: 1] | 73.59%[cite: 1] |
+| **Final Fault Coverage** | 66.81%[cite: 1] | 68.56%[cite: 1] |
+
+**Test Application Time (TAT):** 492.7s CPU time | 501.8s Elapsed time[cite: 1]
+
+---
+
+## 💻 Getting Started
+
+### Prerequisites
+* EDA tools environment initialized[cite: 1].
+* Gate-level netlist for the `syn_polito_rv32e_bpu` derivative (this is included in the delivery archive, so synthesis is not required)[cite: 1].
+
+### Execution
+The complete workflow is automated by a single script[cite: 1]. From the root directory, run:
+
+```bash
+./run_workflow.sh
+```
+
+
 [![Installation CI](https://github.com/openhwgroup/cvw/actions/workflows/install.yml/badge.svg?branch=main)](https://github.com/openhwgroup/cvw/actions/workflows/install.yml)
 
 # core-v-wally
