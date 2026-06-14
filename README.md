@@ -39,6 +39,7 @@ Our testing evaluates three primary subcomponents of the BPU:
 * **Branch History Table (BHT):** A direct-mapped table of 8 entries where each entry is a 2-bit saturating counter used to predict branch direction[cite: 1].
 * **Branch Target Buffer (BTB):** A direct-mapped cache of 8 entries that stores a target address and a 4-bit instruction class[cite: 1].
 * **Return Address Stack (RAS):** A hardware stack structure with up to 10 entries dedicated to predicting return addresses[cite: 1].
+<img width="722" height="500" alt="image" src="https://github.com/user-attachments/assets/8737970a-96d0-40b2-b8f4-bd916045b547" />
 
 ---
 
@@ -63,8 +64,15 @@ The SBST suite is implemented as standalone assembly routines called sequentiall
 ### 4. RAS MATS+ Test (`sbst4.S`)
 * Executes a formal MATS+ march test for the RASPredictor unit[cite: 1].
 * Utilizes `.ras_low` and `.ras_high` memory zones mapped in the linker script to force `0 -> 1` and `1 -> 0` transitions in the RAS SRAM cells[cite: 1].
+<img width="1055" height="238" alt="image" src="https://github.com/user-attachments/assets/84e4e05f-277d-4f16-b102-d553c7fff1ba" />
 
 ---
+### Custom Python Script for BHT entries coverage
+A custom python script was developed to reverse-engineer the hashing function that stimulated different entries in the branch prediction ram.
+<img width="909" height="572" alt="image" src="https://github.com/user-attachments/assets/aa9b0b17-ef64-4350-a123-9aaf42026e84" />
+## Assembly dump
+Assembly code dump sections for different BHT entries stimulation.
+<img width="779" height="765" alt="image" src="https://github.com/user-attachments/assets/342e8f0f-d902-442b-a1bb-54969bf368b3" />
 
 ## 📊 Fault Coverage Results
 Coverage was measured using the ZOIX fault simulator operating on the gate-level netlist[cite: 1]. Despite architectural constraints that limit the stimulation of certain hardcoded memory range bits, the test suite achieves a solid balance of coverage and execution efficiency[cite: 1].
